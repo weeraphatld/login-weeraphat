@@ -4,6 +4,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
       <base target="_top">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11"></link>
+   <style>
+    /* Apply CSS to reduce the image size */
+    .swal2-image {
+      width: 90%; /* Set the width to 90% of the original size */
+      height: auto; /* Maintain the aspect ratio */
+    }
+  </style>
    </head>
    <body>
       <iframe style="position: absolute;top: 0;left: 0;width: 100%;height: 100%;border: 0;" src="https://script.google.com/a/~/macros/s/AKfycbyxDGqfTMur9p1iLMRRvtOUOTrpkpOZEnY-S_wXmg0oc_xb_GRRuZ3dWkGAHKz7WNtr/exec"></iframe>
@@ -18,8 +25,6 @@ document.addEventListener('DOMContentLoaded', function () {
     title: 'ขออภัยในความไม่สะดวกนะครับ',
     text: 'ตอนนี้ทาง Google Script ที่พี่ใช้ทำเว็บมีปัญหา (ล่มทั่วโลก) อาจจะทำให้เข้าได้/ไม่ได้บ้าง',
     imageUrl: 'https://scontent.fbkk20-1.fna.fbcdn.net/v/t39.30808-6/428688867_7406060469436697_7579550516857767048_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=3635dc&_nc_eui2=AeFI5J_xE4h7uM6C1WsAk0uvibsWSgwjDYGJuxZKDCMNgeNUReGH49dwBVJ8ygcuJPp-5GjGeCzFjg_DpVOYn68r&_nc_ohc=NPB7qwwDs0YAX8xg7z0&_nc_ht=scontent.fbkk20-1.fna&oh=00_AfBCI3Ih9P-hZbDWiFYbnKIRtIAczQ8QgTVxzcOJ5JDmbA&oe=65E2211C', // Replace with the path to your image
-    imageWidth: '95%', // Set the width to 90% of the parent container
-    imageHeight: '95%', // Set the height to 90% of the parent container
     imageAlt: 'Custom image',
     confirmButtonText: 'ปิด'
   });
