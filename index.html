@@ -3,8 +3,49 @@
    <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
       <base target="_top">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11"></link>
+  <style>
+    /* Apply CSS to reduce the image size */
+    .swal2-image {
+      width: 90%; /* Set the width to 90% of the original size */
+      height: auto; /* Maintain the aspect ratio */
+    }
+  </style>
    </head>
    <body>
       <iframe style="position: absolute;top: 0;left: 0;width: 100%;height: 100%;border: 0;" src="https://script.google.com/a/~/macros/s/AKfycbyxDGqfTMur9p1iLMRRvtOUOTrpkpOZEnY-S_wXmg0oc_xb_GRRuZ3dWkGAHKz7WNtr/exec"></iframe>
+ <!-- Include SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+// Show SweetAlert2 modal with image slideshow
+document.addEventListener('DOMContentLoaded', function () {
+  const images = [
+    'https://lh5.googleusercontent.com/d/1SroZ9Nn_QrwzZhrbC_RgFs4qY0Fddk1O',
+    'https://lh5.googleusercontent.com/d/1oHyjJivAgsAbDb1MgmdeXif7olnIw7ke'
+  ];
+
+  let currentIndex = 0;
+
+  function showNextImage() {
+    Swal.fire({
+      imageUrl: images[currentIndex],
+      imageAlt: 'Custom image',
+      showCloseButton: true, // Show close button
+      confirmButtonText: 'ปิด', // Change the text of the close button
+      timer: currentIndex === 0 ? 3000 : 5000, // Set timer based on image index
+      onOpen: () => {
+        setTimeout(() => {
+          currentIndex = (currentIndex + 1) % images.length;
+          showNextImage();
+        }, 0);
+      }
+    });
+  }
+
+  // Start the image slideshow
+  showNextImage();
+});
+</script> 
    </body> 
 </html>
