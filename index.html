@@ -7,7 +7,7 @@
   <style>
     /* Apply CSS to reduce the image size */
     .swal2-image {
-      width: 90%; /* Set the width to 90% of the original size */
+      width: 95%; /* Set the width to 95% of the original size */
       height: auto; /* Maintain the aspect ratio */
     }
   </style>
@@ -18,33 +18,16 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-// Show SweetAlert2 modal with image slideshow
+// Show SweetAlert2 modal with a single image
 document.addEventListener('DOMContentLoaded', function () {
-  const images = [
-    'https://lh5.googleusercontent.com/d/1SroZ9Nn_QrwzZhrbC_RgFs4qY0Fddk1O',
-    'https://lh5.googleusercontent.com/d/1oHyjJivAgsAbDb1MgmdeXif7olnIw7ke'
-  ];
+  const imageUrl = 'https://lh5.googleusercontent.com/d/1a43rrFBUl01r4HQVss2b82QZVDs5Fq4x';
 
-  let currentIndex = 0;
-
-  function showNextImage() {
-    Swal.fire({
-      imageUrl: images[currentIndex],
-      imageAlt: 'Custom image',
-      showCloseButton: true, // Show close button
-      confirmButtonText: 'ปิด', // Change the text of the close button
-      timer: currentIndex === 0 ? 3000 : 5000, // Set timer based on image index
-      onOpen: () => {
-        setTimeout(() => {
-          currentIndex = (currentIndex + 1) % images.length;
-          showNextImage();
-        }, currentIndex === 0 ? 3000 : 5000);
-      }
-    });
-  }
-
-  // Start the image slideshow
-  showNextImage();
+  Swal.fire({
+    imageUrl: imageUrl,
+    imageAlt: 'Custom image',
+    showCloseButton: true, // Show close button
+    confirmButtonText: 'ปิด' // Change the text of the close button
+  });
 });
 </script>
    </body> 
