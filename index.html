@@ -4,33 +4,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
       <base target="_top">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11"></link>
-  <!-- Include SweetAlert2 CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11"></link>
   <style>
     /* Apply CSS to reduce the image size */
     .swal2-image {
-      width: 95%; /* Set the width to 90% of the original size */
+      width: 95%; /* Set the width to 95% of the original size */
       height: auto; /* Maintain the aspect ratio */
-    }
-
-    /* Add custom styles for the loader */
-    .loader {
-      border: 4px solid #f3f3f3;
-      border-radius: 50%;
-      border-top: 4px solid #3498db;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      margin-top: -20px;
-      margin-left: -20px;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
     }
   </style>
    </head>
@@ -45,21 +23,10 @@ document.addEventListener('DOMContentLoaded', function () {
   if (window.innerWidth <= 768) {
     const imageUrl = 'https://lh5.googleusercontent.com/d/1qL7DN4qR1ZS-IkD71mVHEuAT8ZOgYUos';
 
-    // Show loading spinner before displaying the image
     Swal.fire({
-      html: '<div class="loader"></div>',
-      showConfirmButton: false, // Hide the close button
-      onBeforeOpen: () => {
-        // Simulate image loading time (replace with your actual loading logic)
-        setTimeout(() => {
-          Swal.close(); // Close the loading spinner
-          Swal.fire({
-            imageUrl: imageUrl,
-            imageAlt: 'Custom image',
-            confirmButtonText: 'ปิด' // Change the text of the close button
-          });
-        }, 2000); // Set the loading time in milliseconds
-      }
+      imageUrl: imageUrl,
+      imageAlt: 'Custom image',
+      confirmButtonText: 'ปิด' // Change the text of the close button
     });
   }
 });
