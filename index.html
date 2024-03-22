@@ -22,13 +22,6 @@
           cursor: pointer;
           user-select: none;
         }
-        /* Custom CSS for circular close button */
-        .swal2-close {
-          border-radius: 50%; /* Makes the button circular */
-          width: 30px; /* Set width of the button */
-          height: 30px; /* Set height of the button */
-          line-height: 30px; /* Aligns the 'X' vertically */
-        }
       </style>
    </head>
    <body>
@@ -48,10 +41,7 @@
                   <div id="nextButton" class="button">&#10095;</div>
                 </div>
               `,
-              showConfirmButton: false,
-              showCloseButton: true,
-              width: '100%',
-              padding: '0px',
+              confirmButtonText: 'ปิด'
             });
 
             let images = ['https://lh5.googleusercontent.com/d/1bTNUxQwwvbE8MTbZdyJXN6N07TPP9g_b', 'https://lh5.googleusercontent.com/d/1D-aBvx1lYcubIW7EWujPI5ie_gqmj7n7'];
