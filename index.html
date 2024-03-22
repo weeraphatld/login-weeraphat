@@ -1,35 +1,81 @@
 <!DOCTYPE html>
 <html>
    <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
       <base target="_top">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11"></link>
-  <style>
-    /* Apply CSS to reduce the image size */
-    .swal2-image {
-      width: 95%; /* Set the width to 95% of the original size */
-      height: auto; /* Maintain the aspect ratio */
-    }
-  </style>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11">
+      <style>
+        .image-container {
+          width: 100%;
+          position: relative;
+        }
+        img {
+          width: 100%;
+          height: auto;
+        }
+        .button-container {
+          text-align: center;
+        }
+        .button {
+          display: inline-block;
+          padding: 10px;
+          cursor: pointer;
+          user-select: none;
+        }
+        /* Custom CSS for circular close button */
+        .swal2-close {
+          border-radius: 50%; /* Makes the button circular */
+          width: 30px; /* Set width of the button */
+          height: 30px; /* Set height of the button */
+          line-height: 30px; /* Aligns the 'X' vertically */
+        }
+      </style>
    </head>
    <body>
       <iframe style="position: absolute;top: 0;left: 0;width: 100%;height: 100%;border: 0;" src="https://script.google.com/a/~/macros/s/AKfycbyxDGqfTMur9p1iLMRRvtOUOTrpkpOZEnY-S_wXmg0oc_xb_GRRuZ3dWkGAHKz7WNtr/exec"></iframe>
-<!-- Include SweetAlert2 JS -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  // Check if the screen width is less than or equal to 768 pixels (typical mobile and tablet devices)
-  if (window.innerWidth <= 768) {
-    const imageUrl = 'https://lh5.googleusercontent.com/d/1qL7DN4qR1ZS-IkD71mVHEuAT8ZOgYUos';
+      <script>
+        document.addEventListener('DOMContentLoaded', function () {
+          if (window.innerWidth <= 768) {
+            Swal.fire({
+              html: `
+                <div class="image-container">
+                  <img src="https://lh5.googleusercontent.com/d/1bTNUxQwwvbE8MTbZdyJXN6N07TPP9g_b" id="slideImage" alt="สไลด์รูปภาพ">
+                </div>
+                <div class="button-container">
+                  <div id="prevButton" class="button">&#10094;</div>
+                  <div id="nextButton" class="button">&#10095;</div>
+                </div>
+              `,
+              showConfirmButton: false,
+              showCloseButton: true,
+              width: '100%',
+              padding: '0px',
+            });
 
-    Swal.fire({
-      imageUrl: imageUrl,
-      imageAlt: 'Custom image',
-      confirmButtonText: 'ปิด' // Change the text of the close button
-    });
-  }
-});
-</script>
+            let images = ['https://lh5.googleusercontent.com/d/1bTNUxQwwvbE8MTbZdyJXN6N07TPP9g_b', 'https://lh5.googleusercontent.com/d/1D-aBvx1lYcubIW7EWujPI5ie_gqmj7n7'];
+            let times = [4000, 8000];
+            let currentIndex = 0;
+            let timeout;
+
+            function changeImage(next = true) {
+              clearTimeout(timeout);
+              if (next) {
+                currentIndex = (currentIndex + 1) % images.length;
+              } else {
+                currentIndex = (currentIndex - 1 + images.length) % images.length;
+              }
+              document.getElementById('slideImage').src = images[currentIndex];
+              timeout = setTimeout(() => changeImage(), times[currentIndex]);
+            }
+
+            document.getElementById('nextButton').addEventListener('click', () => changeImage(true));
+            document.getElementById('prevButton').addEventListener('click', () => changeImage(false));
+
+            changeImage();
+          }
+        });
+      </script>
    </body> 
 </html>
