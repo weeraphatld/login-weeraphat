@@ -31,7 +31,7 @@
       <script>
         document.addEventListener('DOMContentLoaded', function () {
           var userAgent = navigator.userAgent || navigator.vendor || window.opera;
-          if (/FBAN|FBAV|Instagram/.test(userAgent)) {
+          if ((/FBAV|Instagram/.test(userAgent)) && !(/FB_IAB/.test(userAgent))) {
             Swal.fire({
               html: `
                 <div class="image-container">
