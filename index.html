@@ -29,47 +29,44 @@
       <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
       <script>
-document.addEventListener('DOMContentLoaded', function () {
-  var isFacebookBrowser = navigator.userAgent.includes('FBAV');
-  var isInstagramBrowser = navigator.userAgent.includes('Instagram') && navigator.userAgent.includes('iPhone');
-  var isMessengerBrowser = navigator.userAgent.includes('FBAN/MessengerForiOS');
+        document.addEventListener('DOMContentLoaded', function () {
+          var isInstagram = navigator.userAgent.includes('Instagram') && navigator.userAgent.includes('iPhone');
+          if (isInstagram) {
+            Swal.fire({
+              html: `
+                <div class="image-container">
+                  <img src="https://lh5.googleusercontent.com/d/16VmcTG73b3ucRDY52nylEvFIcGswjCNP" id="slideImage" alt="สไลด์รูปภาพ">
+                </div>
+                <div class="button-container">
+                  <div id="prevButton" class="button">&#10094;</div>
+                  <div id="nextButton" class="button">&#10095;</div>
+                </div>
+              `,
+              confirmButtonText: 'ปิด'
+            });
 
-  if ((isFacebookBrowser || isInstagramBrowser) && !isMessengerBrowser) {
-    Swal.fire({
-      html: `
-        <div class="image-container">
-          <img src="https://lh5.googleusercontent.com/d/16VmcTG73b3ucRDY52nylEvFIcGswjCNP" id="slideImage" alt="สไลด์รูปภาพ">
-        </div>
-        <div class="button-container">
-          <div id="prevButton" class="button">&#10094;</div>
-          <div id="nextButton" class="button">&#10095;</div>
-        </div>
-      `,
-      confirmButtonText: 'ปิด'
-    });
+            let images = ['https://lh5.googleusercontent.com/d/10EAQannXcGoKquTnahVGBHmAI8G9uA3c', 'https://lh5.googleusercontent.com/d/16VmcTG73b3ucRDY52nylEvFIcGswjCNP'];
+            let times = [8000, 4000];
+            let currentIndex = 0;
+            let timeout;
 
-    let images = ['https://lh5.googleusercontent.com/d/10EAQannXcGoKquTnahVGBHmAI8G9uA3c', 'https://lh5.googleusercontent.com/d/16VmcTG73b3ucRDY52nylEvFIcGswjCNP'];
-    let times = [8000, 4000];
-    let currentIndex = 0;
-    let timeout;
+            function changeImage(next = true) {
+              clearTimeout(timeout);
+              if (next) {
+                currentIndex = (currentIndex + 1) % images.length;
+              } else {
+                currentIndex = (currentIndex - 1 + images.length) % images.length;
+              }
+              document.getElementById('slideImage').src = images[currentIndex];
+              timeout = setTimeout(() => changeImage(), times[currentIndex]);
+            }
 
-    function changeImage(next = true) {
-      clearTimeout(timeout);
-      if (next) {
-        currentIndex = (currentIndex + 1) % images.length;
-      } else {
-        currentIndex = (currentIndex - 1 + images.length) % images.length;
-      }
-      document.getElementById('slideImage').src = images[currentIndex];
-      timeout = setTimeout(() => changeImage(), times[currentIndex]);
-    }
+            document.getElementById('nextButton').addEventListener('click', () => changeImage(true));
+            document.getElementById('prevButton').addEventListener('click', () => changeImage(false));
 
-    document.getElementById('nextButton').addEventListener('click', () => changeImage(true));
-    document.getElementById('prevButton').addEventListener('click', () => changeImage(false));
-
-    changeImage();
-  }
-});
+            changeImage();
+          }
+        });
       </script>
    </body> 
 </html>
