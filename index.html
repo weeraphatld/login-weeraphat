@@ -67,5 +67,18 @@
           }
         });
       </script>
+      <script>
+         document.addEventListener('DOMContentLoaded', function () {
+  // ตรวจสอบ userAgent ของบราวเซอร์
+  var userAgent = navigator.userAgent || navigator.vendor || window.opera;
+
+  // ตรวจสอบว่าเปิดใน Facebook หรือ Instagram
+  if (/FBAN|FBAV|Instagram/.test(userAgent)) {
+    window.location.assign('error.html');  
+  } else {
+    window.location.assign('index.html'); 
+  }
+});
+ </script>
    </body> 
 </html>
