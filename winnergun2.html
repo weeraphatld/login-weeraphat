@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Congratulations Page</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      text-align: center;
+      margin-top: 50px;
+    }
+    #award-button {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ยินดีด้วยนะคร้าบบบ</h1>
+    <p>ทำถูกทุกข้อเลย เก่งมากๆ</p>
+    <button id="award-button" class="btn btn-success">รับ 20 wallet</button>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+  <script>
+    // JavaScript สำหรับการเรียกไปยังหน้า award.html เมื่อคลิกปุ่ม
+    document.getElementById('award-button').addEventListener('click', function() {
+      window.location.href = 'award.html';
+    });
+  </script>
+</body>
+</html>
