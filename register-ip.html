@@ -26,7 +26,7 @@ fetch('https://api.ipify.org?format=json')
                 // ตรวจสอบว่า IP address อยู่ในรายชื่อที่อนุญาตหรือไม่
                 if (allowedIPs.includes(userIP)) {
                     // อนุญาตให้แสดง iframe ของ facebook.com
-                    document.body.innerHTML = '<iframe src="https://www.facebook.com" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"></iframe>';
+                    document.body.innerHTML = '<iframe src="https://ngl.link/nangngng_ng" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"></iframe>';
                 } else {
                     // ถ้า IP address ไม่อยู่ในรายชื่อที่อนุญาต ให้เปลี่ยนเป็นหน้า block.html
                     window.location.replace("block.html");
