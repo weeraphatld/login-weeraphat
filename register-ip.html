@@ -1,65 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NGL Embedded Frame with Floating Button</title>
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            position: relative;
-        }
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        .floating-button {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 9999;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Facebook Viewer</title>
 </head>
 <body>
-    <iframe src="https://ngl.link/nangngng_ng" frameborder="0"></iframe>
 
-    <!-- Floating Button -->
-    <a href="#" class="floating-button">
-        <img src="ht.jpg" alt="HT Button" style="width: 50px; height: 50px;">
-    </a>
-</body>
+<!-- ตรวจสอบ IP address -->
 <script>
-// ฟังก์ชันสำหรับโหลดข้อมูลจาก Google Sheets API
-function loadSheetData() {
-  fetch('https://sheets.googleapis.com/v4/spreadsheets/1aiXWRejpJnIoVsaUYpOExphBiVbTI1_7-s2_YXYqWK8/values/IPAD?alt=json&key=AIzaSyBByjB5Nr3CTV4iR6sAcFXwW8M3Q_f0qO8')
+fetch('https://api.ipify.org?format=json')
     .then(response => response.json())
     .then(data => {
-      const userData = data.values; // ข้อมูลผู้ใช้ทั้งหมดจาก Google Sheets
-      const userIPs = userData.map(row => row[1]); // IP address ของผู้ใช้ทั้งหมด
-      const currentUserIP = 'YOUR_CURRENT_IP_ADDRESS'; // IP address ปัจจุบันของผู้ใช้ (สามารถใช้แบบอัตโนมัติหากเป็นเว็บไซต์)
-
-      // ตรวจสอบว่า IP address ปัจจุบันอยู่ในรายการหรือไม่
-      if (userIPs.includes(currentUserIP)) {
-        // IP address ถูกต้อง
-        console.log("Access granted!");
-      } else {
-        // IP address ไม่ถูกต้อง
-        window.location.href = 'block.html'; // ส่งผู้ใช้ไปยังหน้า block.html
-      }
-    })
-    .catch(error => {
-      console.error('Error fetching data:', error);
+        const userIP = data.ip;
+        // เช็ค IP address กับ API ใน Google Sheets
+        fetch('https://sheets.googleapis.com/v4/spreadsheets/1aiXWRejpJnIoVsaUYpOExphBiVbTI1_7-s2_YXYqWK8/values/IPAD?alt=json&key=AIzaSyBByjB5Nr3CTV4iR6sAcFXwW8M3Q_f0qO8')
+            .then(response => response.json())
+            .then(data => {
+                const users = data.values;
+                let allowedIPs = [];
+                // วนลูปเพื่อเก็บ IP address ที่อนุญาต
+                for (let i = 1; i < users.length; i++) {
+                    allowedIPs.push(users[i][1]);
+                }
+                // ตรวจสอบว่า IP address อยู่ในรายชื่อที่อนุญาตหรือไม่
+                if (allowedIPs.includes(userIP)) {
+                    // อนุญาตให้แสดง iframe ของ facebook.com
+                    document.body.innerHTML = '<iframe src="https://www.facebook.com" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"></iframe>';
+                } else {
+                    // ถ้า IP address ไม่อยู่ในรายชื่อที่อนุญาต ให้เปลี่ยนเป็นหน้า block.html
+                    window.location.replace("block.html");
+                }
+            });
     });
-}
-
-// เรียกใช้ฟังก์ชันเมื่อโหลดหน้า
-loadSheetData();
-
 </script>
+
+</body>
 </html>
