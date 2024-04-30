@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notes</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 0 20px;
+    }
+
+    .notes-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    .notes-table th, .notes-table td {
+      border: 1px solid #dddddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    .notes-table th {
+      background-color: #f2f2f2;
+    }
+
+    .notes-container {
+      margin-bottom: 10px;
+    }
+
+    input[type="text"] {
+      width: calc(100% - 80px);
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px 0 0 5px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 0 5px 5px 0;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    li {
+      background-color: #f9f9f9;
+      padding: 10px;
+      margin-bottom: 5px;
+      border-radius: 5px;
+    }
+
+    .btn-edit {
+      background-color: #2196F3;
+    }
+
+    .btn-delete {
+      background-color: #f44336;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>My Notes</h1>
+    <div class="notes-container">
+      <input type="text" id="nameInput" placeholder="Enter your name...">
+      <input type="text" id="linkInput" placeholder="Enter your link...">
+      <input type="text" id="noteInput" placeholder="Enter your note...">
+      <button onclick="addNote()">Add Note</button>
+    </div>
+    <table class="notes-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Link</th>
+          <th>Note</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="notesList"></tbody>
+    </table>
+  </div>
+  <script>
+    // Function to add a note
+    function addNote() {
+      var nameInput = document.getElementById("nameInput");
+      var linkInput = document.getElementById("linkInput");
+      var noteInput = document.getElementById("noteInput");
+
+      var name = nameInput.value;
+      var link = linkInput.value;
+      var note = noteInput.value;
+
+      if (note.trim() === "") {
+        alert("Please enter a note.");
+        return;
+      }
+
+      var tbody = document.getElementById("notesList");
+      var row = document.createElement("tr");
+
+      var nameCell = document.createElement("td");
+      nameCell.textContent = name;
+      row.appendChild(nameCell);
+
+      var linkCell = document.createElement("td");
+      linkCell.textContent = link;
+      row.appendChild(linkCell);
+
+      var noteCell = document.createElement("td");
+      noteCell.textContent = note;
+      row.appendChild(noteCell);
+
+      var actionCell = document.createElement("td");
+
+      var editBtn = document.createElement("button");
+      editBtn.textContent = "Edit";
+      editBtn.className = "btn-edit";
+      editBtn.onclick = function() {
+        var newName = prompt("Enter new name:", name);
+        if (newName !== null && newName.trim() !== "") {
+          nameCell.textContent = newName;
+          updateLocalStorage();
+        }
+        var newLink = prompt("Enter new link:", link);
+        if (newLink !== null && newLink.trim() !== "") {
+          linkCell.textContent = newLink;
+          updateLocalStorage();
+        }
+        var newNote = prompt("Enter new note:", note);
+        if (newNote !== null && newNote.trim() !== "") {
+          noteCell.textContent = newNote;
+          updateLocalStorage();
+        }
+      };
+      actionCell.appendChild(editBtn);
+
+      var deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "Delete";
+      deleteBtn.className = "btn-delete";
+      deleteBtn.onclick = function() {
+        if (confirm("Are you sure you want to delete this note?")) {
+          tbody.removeChild(row);
+          updateLocalStorage();
+        }
+      };
+      actionCell.appendChild(deleteBtn);
+
+      row.appendChild(actionCell);
+
+      tbody.appendChild(row);
+      nameInput.value = "";
+      linkInput.value = "";
+      noteInput.value = "";
+
+      updateLocalStorage();
+    }
+
+    // Function to update local storage
+    function updateLocalStorage() {
+      var tbody = document.getElementById("notesList");
+      var notes = [];
+      tbody.childNodes.forEach(function(node) {
+        if (node.nodeType === 1 && node.tagName === "TR") {
+          var name = node.children[0].textContent.trim();
+          var link = node.children[1].textContent.trim();
+          var note = node.children[2].textContent.trim();
+          notes.push({ name: name, link: link, note: note });
+        }
+      });
+      localStorage.setItem("notes", JSON.stringify(notes));
+    }
+
+    // Function to load notes from local storage
+    window.onload = function() {
+      var tbody = document.getElementById("notesList");
+      var notes = localStorage.getItem("notes");
+      if (notes) {
+        notes = JSON.parse(notes);
+        notes.forEach(function(note) {
+          var row = document.createElement("tr");
+
+          var nameCell = document.createElement("td");
+          nameCell.textContent = note.name;
+          row.appendChild(nameCell);
+
+          var linkCell = document.createElement("td");
+          linkCell.textContent = note.link;
+          row.appendChild(linkCell);
+
+          var noteCell = document.createElement("td");
+          noteCell.textContent = note.note;
+          row.appendChild(noteCell);
+
+          var actionCell = document.createElement("td");
+
+          var editBtn = document.createElement("button");
+          editBtn.textContent = "Edit";
+          editBtn.className = "btn-edit";
+          editBtn.onclick = function() {
+            var newName = prompt("Enter new name:", note.name);
+            if (newName !== null && newName.trim() !== "") {
+              nameCell.textContent = newName;
+              updateLocalStorage();
+            }
+            var newLink = prompt("Enter new link:", note.link);
+            if (newLink !== null && newLink.trim() !== "") {
+              linkCell.textContent = newLink;
+              updateLocalStorage();
+            }
+            var newNote = prompt("Enter new note:", note.note);
+            if (newNote !== null && newNote.trim() !== "") {
+              noteCell.textContent = newNote;
+              updateLocalStorage();
+            }
+          };
+          actionCell.appendChild(editBtn);
+
+          var deleteBtn = document.createElement("button");
+          deleteBtn.textContent = "Delete";
+          deleteBtn.className = "btn-delete";
+          deleteBtn.onclick = function() {
+            if (confirm("Are you sure you want to delete this note?")) {
+              tbody.removeChild(row);
+              updateLocalStorage();
+            }
+          };
+          actionCell.appendChild(deleteBtn);
+
+          row.appendChild(actionCell);
+
+          tbody.appendChild(row);
+        });
+      }
+    };
+  </script>
+</body>
+</html>
