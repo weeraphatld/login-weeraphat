@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แสดงค่า Latitude และ Longitude</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f7f7f7;
+    }
+
+    #container {
+        width: 80%;
+        margin: 50px auto;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+        text-align: center;
+        color: #333;
+    }
+
+    #latitude, #longitude {
+        margin-top: 20px;
+        font-size: 18px;
+        text-align: center;
+    }
+
+    button {
+        display: block;
+        margin: 20px auto;
+        padding: 10px 20px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+        background-color: #45a049;
+    }
+</style>
+</head>
+<body>
+<div id="container">
+    <h1>ค่า Latitude และ Longitude ปัจจุบัน</h1>
+    <div id="latitude"></div>
+    <div id="longitude"></div>
+    <button onclick="getLocation()">รีเฟรชตำแหน่ง</button>
+</div>
+
+<script>
+function showPosition(position) {
+    document.getElementById('latitude').innerText = 'Latitude: ' + position.coords.latitude;
+    document.getElementById('longitude').innerText = 'Longitude: ' + position.coords.longitude;
+}
+
+function showError(error) {
+    switch(error.code) {
+        case error.PERMISSION_DENIED:
+            alert("ผู้ใช้ปฏิเสธการเข้าถึงตำแหน่ง");
+            break;
+        case error.POSITION_UNAVAILABLE:
+            alert("ข้อมูลตำแหน่งไม่พร้อมใช้งานในขณะนี้");
+            break;
+        case error.TIMEOUT:
+            alert("การร้องขอตำแหน่งใช้เวลาเกินกำหนด");
+            break;
+        case error.UNKNOWN_ERROR:
+            alert("เกิดข้อผิดพลาดที่ไม่รู้จัก");
+            break;
+    }
+}
+
+function getLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition, showError);
+    } else {
+        alert("บราวเซอร์ของคุณไม่รองรับการเข้าถึงตำแหน่ง");
+    }
+}
+</script>
+</body>
+</html>
