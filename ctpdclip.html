@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>นำเสนอคลิป กิจกรรมเสริมความเป็นครู</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .card {
+      margin-bottom: 20px;
+    }
+    .fa-link {
+      color: blue;
+      cursor: pointer;
+    }
+
+    .large-sweetalert {
+  width: 800px; /* กำหนดขนาดความกว้างที่มากกว่า iframe */
+  height: 500px; /* กำหนดขนาดความสูง */
+}
+
+.large-sweetalert iframe {
+  width: 100%; /* ทำให้ iframe เต็มความกว้างของ SweetAlert */
+  height: 80%; /* ทำให้ iframe สูงขึ้นและเหลือพื้นที่สำหรับ title */
+}
+
+
+  </style>
+</head>
+<body>
+
+  <h1>นำเสนอคลิป กิจกรรมเสริมความเป็นครู</h1>
+  <div class="row" id="dataContainer">
+    <!-- Dynamic Post Cards Here -->
+  </div>
+
+  <script>
+    const SHEET_ID = '1L-L2xpGI_jj0o_7C4q9sjXcihfnJPrK2-XRoNBQZ4JI';
+const API_KEY = 'AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE';
+const SHEET_NAME = 'นำเสนอคลิปศูนย์ฝึก';
+
+const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}?alt=json&key=${API_KEY}`;
+
+fetch(apiUrl)
+  .then(response => response.json())
+  .then(data => {
+    const rows = data.values.slice(1); // Skip the header
+    const container = document.getElementById('dataContainer');
+
+    rows.forEach(row => {
+      const fieldOfStudy = row[0];
+      const year = row[1];
+      const videoUrl = row[2];
+      const youtubeId = extractYouTubeId(videoUrl); // Extract YouTube video ID
+
+      // Create Bootstrap Card for each video
+      const card = document.createElement('div');
+      card.className = 'col-lg-4 col-md-6 col-sm-12'; // Responsive classes
+      card.innerHTML = `
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">${fieldOfStudy}</h5>
+            <p class="card-text">ชั้นปี: ${year}</p>
+            <a class="fa fa-link" onclick="showVideo('${youtubeId}', '${fieldOfStudy}', '${year}')"></a>
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  })
+  .catch(error => console.error('Error fetching data:', error));
+
+function extractYouTubeId(url) {
+  let videoId = '';
+
+  // Long format link
+  if (url.includes('watch?v=')) {
+    videoId = url.split('v=')[1].split('&')[0];
+  }
+  // Short format link
+  else if (url.includes('youtu.be/')) {
+    videoId = url.split('youtu.be/')[1].split('?')[0];
+  }
+
+  return videoId;
+}
+
+function showVideo(youtubeId, fieldOfStudy, year) {
+  Swal.fire({
+    title: `คลิปของสาขาวิชา${fieldOfStudy} (ชั้นปีที่ ${year})`,
+    html: `<iframe width="560" height="315" src="https://www.youtube.com/embed/${youtubeId}" frameborder="0" allowfullscreen></iframe>`,
+    customClass: {
+      popup: 'large-sweetalert' // Custom class for popup size
+    },
+    showCloseButton: true,
+    focusConfirm: false,
+  });
+}
+
+
+  </script>
+
+</body>
+</html>
