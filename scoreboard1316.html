@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>อันดับคะแนนควิซ จรรยาบรรณวิชาชีพครู ภาคบ่าย</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #2c2c2c; /* Dark gray background */
+            color: #f9f9f9; /* Light text */
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #ff6f00; /* Bright orange for the title */
+            margin-bottom: 30px;
+        }
+
+        #postcards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 postcards per row */
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px; /* Limit max width */
+        }
+
+        .postcard {
+            background-color: #3e3e3e; /* Gray background for postcards */
+            border: 2px solid yellow; /* Yellow border */
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 0 15px yellow; /* Glowing yellow effect */
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .postcard h3 {
+            margin: 0 0 10px;
+            color: #ffcc00; /* Bright yellow name */
+        }
+
+        .postcard p {
+            margin: 5px 0;
+            color: #dddddd; /* Light gray text for the details */
+        }
+
+        .postcard:hover {
+            transform: translateY(-10px); /* Lift up effect on hover */
+            box-shadow: 0 0 25px #ffcc00; /* Brighter glowing effect on hover */
+        }
+
+        @media (max-width: 768px) {
+            #postcards {
+                grid-template-columns: repeat(2, 1fr); /* 2 postcards per row on smaller screens */
+            }
+        }
+
+        @media (max-width: 480px) {
+            #postcards {
+                grid-template-columns: 1fr; /* 1 postcard per row on mobile */
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>อันดับคะแนน</h1>
+    <div id="postcards"></div>
+
+    <script>
+        const apiUrl = 'https://sheets.googleapis.com/v4/spreadsheets/1sdTl0HeN2pJMaZFiKv88Dw3Mvfl-MD7CkYm2UIOmt3k/values/คะแนนรอบเช้า?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE';
+
+        async function fetchData() {
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                const rows = data.values.slice(1); // Skip the header row
+
+                // Process the data into an array of objects
+                const entries = rows.map(row => {
+                    const [date, time] = row[0].split(' '); // Split date and time
+                    return {
+                        time,                        // Extract only time (HH:MM:SS) from column A
+                        score: parseInt(row[1].split('/')[0]),  // Extract score (just the number from column B)
+                        field: row[2],                   // Field of study (column C)
+                        year: row[3],                    // Year (column D)
+                        name: row[6],                    // Full name (column G)
+                        fullDate: row[0]                 // Full date-time for sorting
+                    };
+                });
+
+                // Sort by score in descending order and by time in ascending order if scores are equal
+                entries.sort((a, b) => {
+                    if (b.score === a.score) {
+                        return new Date(a.fullDate) - new Date(b.fullDate); // Earlier times come first
+                    }
+                    return b.score - a.score; // Higher scores come first
+                });
+
+                displayEntries(entries);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        function displayEntries(entries) {
+            const container = document.getElementById('postcards');
+
+            entries.forEach(entry => {
+                const card = document.createElement('div');
+                card.classList.add('postcard');
+
+                card.innerHTML = `
+                    <h3>${entry.name}</h3>
+                    <p>สาขาวิชา${entry.field}</p>
+                    <p>ชั้นปีที่ ${entry.year}</p>
+                    <p>คะแนนที่ได้ : ${entry.score} / 10</p>
+                    <p>เวลาที่ส่ง: ${entry.time}</p>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        // Fetch and display the data on page load
+        fetchData();
+    </script>
+</body>
+</html>
