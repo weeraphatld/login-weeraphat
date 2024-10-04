@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>อันดับคะแนนควิซ จรรยาบรรณวิชาชีพครู ภาคบ่าย</title>
+    <title>อันดับคะแนนควิซ จรรยาบรรณวิชาชีพครู ภาคเช้า</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -74,7 +74,7 @@
     <div id="postcards"></div>
 
     <script>
-        const apiUrl = 'https://sheets.googleapis.com/v4/spreadsheets/1sdTl0HeN2pJMaZFiKv88Dw3Mvfl-MD7CkYm2UIOmt3k/values/คะแนนรอบเช้า?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE';
+        const apiUrl = 'https://sheets.googleapis.com/v4/spreadsheets/1falIkSXUUQC-B3zdFgJ52lxS2d1LlG_zCop37Um7GHY/values/คะแนนรอบเช้า?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE';
 
         async function fetchData() {
             try {
@@ -120,7 +120,7 @@
                     <h3>${entry.name}</h3>
                     <p>สาขาวิชา${entry.field}</p>
                     <p>ชั้นปีที่ ${entry.year}</p>
-                    <p>คะแนนที่ได้ : ${entry.score} / 10</p>
+                    <p>คะแนนที่ได้ : ${entry.score} / 20</p>
                     <p>เวลาที่ส่ง: ${entry.time}</p>
                 `;
 
