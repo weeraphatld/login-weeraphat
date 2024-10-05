@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -57,21 +58,24 @@ fetch(apiUrl)
       const fieldOfStudy = row[0];
       const year = row[1];
       const videoUrl = row[2];
-      const youtubeId = extractYouTubeId(videoUrl); // Extract YouTube video ID
 
-      // Create Bootstrap Card for each video
-      const card = document.createElement('div');
-      card.className = 'col-lg-4 col-md-6 col-sm-12'; // Responsive classes
-      card.innerHTML = `
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">${fieldOfStudy}</h5>
-            <p class="card-text">ชั้นปี: ${year}</p>
-            <a class="fa fa-link" onclick="showVideo('${youtubeId}', '${fieldOfStudy}', '${year}')"></a>
+      if (videoUrl) { // แสดงเฉพาะถ้ามีลิงก์ YouTube
+        const youtubeId = extractYouTubeId(videoUrl); // ดึง YouTube ID จากลิงก์
+
+        // สร้างการ์ดสำหรับแต่ละวิดีโอ
+        const card = document.createElement('div');
+        card.className = 'col-lg-4 col-md-6 col-sm-12'; // คลาสสำหรับ responsive
+        card.innerHTML = `
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">${fieldOfStudy}</h5>
+              <p class="card-text">ชั้นปี: ${year}</p>
+              <a class="fa fa-link" onclick="showVideo('${youtubeId}', '${fieldOfStudy}', '${year}')"></a>
+            </div>
           </div>
-        </div>
-      `;
-      container.appendChild(card);
+        `;
+        container.appendChild(card);
+      }
     });
   })
   .catch(error => console.error('Error fetching data:', error));
