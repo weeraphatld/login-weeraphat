@@ -29,6 +29,15 @@
             border-color: #FF4500;
         }
 
+        /* Styling for form container */
+        .form-container {
+            background-color: white; /* White background for form */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid #ddd;
+        }
+
         /* Styling for suggestion list */
         #suggestions {
             display: none;
@@ -65,6 +74,14 @@
                 width: 100%;
             }
         }
+        
+        h4 {
+        margin-bottom: 25px; /* Increase spacing below subtitle */
+    }
+
+    .form-label {
+        margin-top: 5px; /* Add some space above the label */
+    }
     </style>
 </head>
 <body class="p-5">
@@ -73,103 +90,112 @@
         <img src="https://lh5.googleusercontent.com/d/1RDwcMP1D672DsorfmDwzZOeZ8d68PdOg" alt="Logo" class="img-fluid" style="max-width: 150px;">
     </div>
 
-    <h1 class="text-center">แบบประเมินสมรรถนะทางวิชาชีพครู</h1>
-    <h4 class="text-center">(สำหรับอาจารย์นิเทศก์)</h4>
+    <!-- Form container with white background -->
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8 col-sm-12">
+                <div class="form-container">
+                    <h1 class="text-center">แบบประเมินสมรรถนะทางวิชาชีพครู</h1>
+                    <h4 class="text-center">(สำหรับอาจารย์นิเทศก์)</h4>
 
-    <!-- Search input for typing name -->
-    <div class="mb-3 position-relative">
-        <label for="search-name" class="form-label">พิมพ์ชื่อ-นามสกุลนิสิต ที่ต้องการประเมิน :</label>
-        <input type="text" id="search-name" class="form-control" oninput="showSuggestions()">
-        <div id="suggestions" class="list-group"></div>
+                    <!-- Search input for typing name -->
+                    <div class="mb-3 position-relative">
+                        <label for="search-name" class="form-label">พิมพ์ชื่อ-นามสกุลนิสิต ที่ต้องการประเมิน :</label>
+                        <input type="text" id="search-name" class="form-control" oninput="showSuggestions()">
+                        <div id="suggestions" class="list-group"></div>
+                    </div>
+
+                    <!-- Button to go to the evaluation link -->
+                    <button id="evaluationButton" class="btn btn-primary" disabled>ทำแบบประเมิน (Google Form)</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Button to go to the evaluation link -->
-    <button id="evaluationButton" class="btn btn-primary" disabled>ทำแบบประเมิน (Google Form)</button>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const apiUrl1 = 'https://sheets.googleapis.com/v4/spreadsheets/1Avnehuep6Cjhj084ExCSXK6O5zv_aMg3O2XKQoTAgvs/values/Sheet1?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE'; // Main data source
+        const apiUrl2 = 'https://sheets.googleapis.com/v4/spreadsheets/1L07CPBUuw90NZzkGNeNTqXBqUy1pxuS046LrEdzy3CY/values/Form Responses 1?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE'; // Evaluation data
+        const suggestionsContainer = document.getElementById('suggestions');
+        const evaluationButton = document.getElementById('evaluationButton');
+        let data = [];
+        let evaluatedNames = [];
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const apiUrl1 = 'https://sheets.googleapis.com/v4/spreadsheets/1Avnehuep6Cjhj084ExCSXK6O5zv_aMg3O2XKQoTAgvs/values/Sheet1?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE'; // Main data source
-    const apiUrl2 = 'https://sheets.googleapis.com/v4/spreadsheets/1L07CPBUuw90NZzkGNeNTqXBqUy1pxuS046LrEdzy3CY/values/Form Responses 1?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE'; // Evaluation data
-    const suggestionsContainer = document.getElementById('suggestions');
-    const evaluationButton = document.getElementById('evaluationButton');
-    let data = [];
-    let evaluatedNames = [];
+        // Fetch data from the second Google Sheets API (evaluated names)
+        fetch(apiUrl2)
+            .then(response => response.json())
+            .then(data => {
+                const rows = data.values;
+                // Extract evaluated first and last names (columns C and D) and check if column F equals 'เอ'
+                evaluatedNames = rows.slice(1).map(row => ({
+                    firstName: row[2],  // Column C
+                    lastName: row[3],   // Column D
+                    status: row[5]      // Column F (status)
+                })).filter(evaluated => evaluated.status === 'เอ'); // Only keep those where column F is 'เอ'
+            })
+            .then(() => {
+                // After fetching evaluated names, fetch the main data
+                fetch(apiUrl1)
+                    .then(response => response.json())
+                    .then(dataResponse => {
+                        const rows = dataResponse.values;
 
-    // Fetch data from the second Google Sheets API (evaluated names)
-    fetch(apiUrl2)
-        .then(response => response.json())
-        .then(data => {
-            const rows = data.values;
-            // Extract evaluated first and last names (columns C and D) and check if column F equals 'เอ'
-            evaluatedNames = rows.slice(1).map(row => ({
-                firstName: row[2],  // Column C
-                lastName: row[3],   // Column D
-                status: row[5]      // Column F (status)
-            })).filter(evaluated => evaluated.status === 'เอ'); // Only keep those where column F is 'เอ'
-        })
-        .then(() => {
-            // After fetching evaluated names, fetch the main data
-            fetch(apiUrl1)
-                .then(response => response.json())
-                .then(dataResponse => {
-                    const rows = dataResponse.values;
+                        // Store the data for further filtering during search
+                        data = rows.slice(1).filter(row => {
+                            const firstName = row[1]; // Column B (first name)
+                            const lastName = row[2];  // Column C (last name)
 
-                    // Store the data for further filtering during search
-                    data = rows.slice(1).filter(row => {
-                        const firstName = row[1]; // Column B (first name)
-                        const lastName = row[2];  // Column C (last name)
+                            // Check if this name is already evaluated and status is 'เอ'
+                            const isEvaluated = evaluatedNames.some(evaluated => 
+                                evaluated.firstName === firstName && evaluated.lastName === lastName
+                            );
 
-                        // Check if this name is already evaluated and status is 'เอ'
-                        const isEvaluated = evaluatedNames.some(evaluated => 
-                            evaluated.firstName === firstName && evaluated.lastName === lastName
-                        );
+                            // Only keep names that have not been evaluated
+                            return !isEvaluated;
+                        });
+                    })
+                    .catch(error => console.error('Error fetching main data:', error));
+            })
+            .catch(error => console.error('Error fetching evaluation data:', error));
 
-                        // Only keep names that have not been evaluated
-                        return !isEvaluated;
-                    });
-                })
-                .catch(error => console.error('Error fetching main data:', error));
-        })
-        .catch(error => console.error('Error fetching evaluation data:', error));
+        // Show suggestions based on input
+        async function showSuggestions() {
+            const input = document.getElementById('search-name').value.toLowerCase().trim();
+            suggestionsContainer.innerHTML = '';
 
-    // Show suggestions based on input
-    async function showSuggestions() {
-        const input = document.getElementById('search-name').value.toLowerCase().trim();
-        suggestionsContainer.innerHTML = '';
+            if (input === "") {
+                suggestionsContainer.style.display = 'none';
+                return;
+            }
 
-        if (input === "") {
-            suggestionsContainer.style.display = 'none';
-            return;
-        }
+            // Filter names based on input
+            const matches = data.filter(row => row[3].toLowerCase().includes(input)); // Column D (full name)
 
-        // Filter names based on input
-        const matches = data.filter(row => row[3].toLowerCase().includes(input)); // Column D (full name)
-
-        if (matches.length > 0) {
-            matches.forEach(match => {
-                const suggestionItem = document.createElement('div');
-                suggestionItem.className = 'list-group-item';
-                suggestionItem.textContent = match[3]; // Show name from column D
-                suggestionItem.onclick = () => {
-                    document.getElementById('search-name').value = match[3]; // Set the input value
-                    evaluationButton.disabled = false;
-                    evaluationButton.onclick = function() {
-                        const selectedLink = match[5]; // Column F (evaluation link)
-                        window.open(selectedLink, '_blank'); // Open link in a new tab
+            if (matches.length > 0) {
+                matches.forEach(match => {
+                    const suggestionItem = document.createElement('div');
+                    suggestionItem.className = 'list-group-item';
+                    suggestionItem.textContent = match[3]; // Show name from column D
+                    suggestionItem.onclick = () => {
+                        document.getElementById('search-name').value = match[3]; // Set the input value
+                        evaluationButton.disabled = false;
+                        evaluationButton.onclick = function() {
+                            const selectedLink = match[5]; // Column F (evaluation link)
+                            window.open(selectedLink, '_blank'); // Open link in a new tab
+                        };
+                        suggestionsContainer.style.display = 'none';
                     };
-                    suggestionsContainer.style.display = 'none';
-                };
-                suggestionsContainer.appendChild(suggestionItem);
-            });
-            suggestionsContainer.style.display = 'block';
-        } else {
-            suggestionsContainer.style.display = 'none';
+                    suggestionsContainer.appendChild(suggestionItem);
+                });
+                suggestionsContainer.style.display = 'block';
+            } else {
+                suggestionsContainer.style.display = 'none';
+            }
         }
-    }
 
-    // Attach the showSuggestions function to window for global scope
-    window.showSuggestions = showSuggestions;
-});
-</script>
+        // Attach the showSuggestions function to window for global scope
+        window.showSuggestions = showSuggestions;
+    });
+    </script>
 </body>
 </html>
