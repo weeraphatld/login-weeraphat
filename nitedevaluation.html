@@ -82,6 +82,24 @@
     .form-label {
         margin-top: 5px; /* Add some space above the label */
     }
+    
+    /* Floating Messenger button styling */
+.messenger-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #79b8f2;
+    border-radius: 50%;
+    padding: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    transition: transform 0.3s;
+}
+
+.messenger-button:hover {
+    transform: scale(1.1);
+}
+
     </style>
 </head>
 <body class="p-5">
@@ -107,6 +125,11 @@
 
                     <!-- Button to go to the evaluation link -->
                     <button id="evaluationButton" class="btn btn-primary" disabled>ทำแบบประเมิน (Google Form)</button>
+                    <!-- Floating Messenger button -->
+<a href="https://m.me/ctpd.edu.msu" target="_blank" class="messenger-button">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Facebook_Messenger_logo_2020.svg/1200px-Facebook_Messenger_logo_2020.svg.png" alt="Messenger" class="img-fluid" style="width: 50px;">
+</a>
+
                 </div>
             </div>
         </div>
