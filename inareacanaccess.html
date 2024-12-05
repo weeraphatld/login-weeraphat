@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตรวจสอบพิกัด</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+</head>
+<body class="flex items-center justify-center min-h-screen bg-gray-100">
+    <div class="text-center p-6 bg-white shadow-lg rounded-lg">
+        <h1 class="text-xl font-bold mb-4">ตรวจสอบพิกัดของคุณ</h1>
+        <button id="checkLocationBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4">
+            ตรวจสอบพิกัด
+        </button>
+        <p id="statusMessage" class="text-gray-700 mb-4 hidden"></p>
+        <button id="facebookLinkBtn" class="bg-gray-400 text-white font-bold py-2 px-4 rounded cursor-not-allowed" disabled>
+            เปิด Facebook
+        </button>
+    </div>
+
+    <script>
+        // พิกัดเป้าหมาย
+        const targetLatitude = 16.250813;
+        const targetLongitude = 103.247299;
+
+        // ฟังก์ชันคำนวณระยะทางระหว่างสองพิกัด (Haversine formula)
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; // รัศมีของโลก (เมตร)
+            const toRadians = (degrees) => degrees * (Math.PI / 180);
+            const dLat = toRadians(lat2 - lat1);
+            const dLon = toRadians(lon2 - lon1);
+
+            const a = Math.sin(dLat / 2) ** 2 +
+                      Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+                      Math.sin(dLon / 2) ** 2;
+
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c; // ระยะทางเป็นเมตร
+        }
+
+        document.getElementById("checkLocationBtn").addEventListener("click", () => {
+            if (navigator.geolocation) {
+                Swal.fire({
+                    title: 'กำลังตรวจสอบพิกัด...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        Swal.close();
+                        const { latitude, longitude } = position.coords;
+                        const distance = calculateDistance(latitude, longitude, targetLatitude, targetLongitude);
+
+                        const statusMessage = document.getElementById("statusMessage");
+                        const facebookLinkBtn = document.getElementById("facebookLinkBtn");
+
+                        if (distance <= 10) {
+                            statusMessage.textContent = `คุณอยู่ในพื้นที่ (ระยะห่าง ${distance.toFixed(2)} เมตร)`;
+                            statusMessage.classList.remove("hidden");
+                            statusMessage.classList.add("text-green-500");
+
+                            facebookLinkBtn.disabled = false;
+                            facebookLinkBtn.classList.remove("bg-gray-400", "cursor-not-allowed");
+                            facebookLinkBtn.classList.add("bg-blue-500", "hover:bg-blue-700");
+                            facebookLinkBtn.addEventListener("click", () => {
+                                window.open("https://facebook.com", "_blank");
+                            });
+                        } else {
+                            statusMessage.textContent = `คุณไม่ได้อยู่ในพื้นที่ (ระยะห่าง ${distance.toFixed(2)} เมตร)`;
+                            statusMessage.classList.remove("hidden");
+                            statusMessage.classList.add("text-red-500");
+
+                            facebookLinkBtn.disabled = true;
+                            facebookLinkBtn.classList.remove("bg-blue-500", "hover:bg-blue-700");
+                            facebookLinkBtn.classList.add("bg-gray-400", "cursor-not-allowed");
+                        }
+                    },
+                    (error) => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'ไม่สามารถดึงตำแหน่งได้',
+                            text: error.message
+                        });
+                    }
+                );
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ไม่รองรับการตรวจสอบตำแหน่ง',
+                    text: 'เบราว์เซอร์ของคุณไม่รองรับฟีเจอร์นี้'
+                });
+            }
+        });
+    </script>
+</body>
+</html>
