@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,8 +7,8 @@
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background-color: #2c2c2c; /* Dark gray background */
-            color: #f9f9f9; /* Light text */
+            background-color: #2c2c2c;
+            color: #f9f9f9;
             margin: 0;
             padding: 20px;
             display: flex;
@@ -18,24 +17,24 @@
         }
 
         h1 {
-            color: #ff6f00; /* Bright orange for the title */
+            color: #ff6f00;
             margin-bottom: 30px;
         }
 
         #postcards {
             display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 3 postcards per row */
+            grid-template-columns: repeat(3, 1fr);
             gap: 20px;
             width: 100%;
-            max-width: 1200px; /* Limit max width */
+            max-width: 1200px;
         }
 
         .postcard {
-            background-color: #3e3e3e; /* Gray background for postcards */
-            border: 2px solid yellow; /* Yellow border */
+            background-color: #3e3e3e;
+            border: 2px solid yellow;
             border-radius: 15px;
             padding: 20px;
-            box-shadow: 0 0 15px yellow; /* Glowing yellow effect */
+            box-shadow: 0 0 15px yellow;
             transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
             display: flex;
             flex-direction: column;
@@ -44,28 +43,63 @@
 
         .postcard h3 {
             margin: 0 0 10px;
-            color: #ffcc00; /* Bright yellow name */
+            color: #ffcc00;
         }
 
         .postcard p {
             margin: 5px 0;
-            color: #dddddd; /* Light gray text for the details */
+            color: #dddddd;
         }
 
         .postcard:hover {
-            transform: translateY(-10px); /* Lift up effect on hover */
-            box-shadow: 0 0 25px #ffcc00; /* Brighter glowing effect on hover */
+            transform: translateY(-10px);
+            box-shadow: 0 0 25px #ffcc00;
+        }
+
+        /* อันดับ 1 */
+        .postcard.top-1 {
+            background-color: #ffd700;
+            color: #2c2c2c;
+            box-shadow: 0 0 25px #ffd700;
+        }
+
+        /* อันดับ 2 */
+        .postcard.top-2 {
+            background-color: #c0c0c0;
+            color: #2c2c2c;
+            box-shadow: 0 0 20px #c0c0c0;
+        }
+
+        /* อันดับ 3 */
+        .postcard.top-3 {
+            background-color: #e8a15b;
+            color: #2c2c2c;
+            box-shadow: 0 0 15px #cd7f32;
+        }
+
+        /* ชื่อเป็นสีน้ำเงิน */
+        .postcard.top-1 h3,
+        .postcard.top-2 h3,
+        .postcard.top-3 h3 {
+            color: blue;
+        }
+
+        /* ตัวอักษรที่เหลือเป็นสีดำ */
+        .postcard.top-1 p,
+        .postcard.top-2 p,
+        .postcard.top-3 p {
+            color: black;
         }
 
         @media (max-width: 768px) {
             #postcards {
-                grid-template-columns: repeat(2, 1fr); /* 2 postcards per row on smaller screens */
+                grid-template-columns: repeat(2, 1fr);
             }
         }
 
         @media (max-width: 480px) {
             #postcards {
-                grid-template-columns: 1fr; /* 1 postcard per row on mobile */
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -81,27 +115,25 @@
             try {
                 const response = await fetch(apiUrl);
                 const data = await response.json();
-                const rows = data.values.slice(1); // Skip the header row
+                const rows = data.values.slice(1);
 
-                // Process the data into an array of objects
                 const entries = rows.map(row => {
-                    const [date, time] = row[0].split(' '); // Split date and time
+                    const [date, time] = row[0].split(' ');
                     return {
-                        time,                        // Extract only time (HH:MM:SS) from column A
-                        score: parseInt(row[1].split('/')[0]),  // Extract score (just the number from column B)
-                        field: row[2],                   // Field of study (column C)
-                        year: row[3],                    // Year (column D)
-                        name: row[6],                    // Full name (column G)
-                        fullDate: row[0]                 // Full date-time for sorting
+                        time,
+                        score: parseInt(row[1].split('/')[0]),
+                        field: row[2],
+                        year: row[3],
+                        name: row[6],
+                        fullDate: row[0]
                     };
                 });
 
-                // Sort by score in descending order and by time in ascending order if scores are equal
                 entries.sort((a, b) => {
                     if (b.score === a.score) {
-                        return new Date(a.fullDate) - new Date(b.fullDate); // Earlier times come first
+                        return new Date(a.fullDate) - new Date(b.fullDate);
                     }
-                    return b.score - a.score; // Higher scores come first
+                    return b.score - a.score;
                 });
 
                 displayEntries(entries);
@@ -113,12 +145,16 @@
         function displayEntries(entries) {
             const container = document.getElementById('postcards');
 
-            entries.forEach(entry => {
+            entries.forEach((entry, index) => {
                 const card = document.createElement('div');
                 card.classList.add('postcard');
 
+                if (index === 0) card.classList.add('top-1');
+                else if (index === 1) card.classList.add('top-2');
+                else if (index === 2) card.classList.add('top-3');
+
                 card.innerHTML = `
-                    <h3>${entry.name}</h3>
+                    <h3 class="rank">${index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : ''} ${entry.name}</h3>
                     <p>สาขาวิชา${entry.field}</p>
                     <p>ชั้นปีที่ ${entry.year}</p>
                     <p>คะแนนที่ได้ : ${entry.score} / 20</p>
@@ -129,7 +165,6 @@
             });
         }
 
-        // Fetch and display the data on page load
         fetchData();
     </script>
 </body>
