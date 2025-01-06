@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Gallery - A4 Format</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .gallery {
+            display: grid;
+            grid-gap: 10px;
+            page-break-after: always;
+        }
+        .gallery img {
+            width: 100%;
+            height: auto;
+            border: 1px solid #ccc;
+            padding: 5px;
+            background-color: #f9f9f9;
+        }
+        .save-button, .sort-button, .upload-button, .restart-button {
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+        .save-button:hover, .sort-button:hover, .upload-button:hover, .restart-button:hover {
+            background-color: #0056b3;
+        }
+        .completed {
+            background-color: #28a745; /* Green */
+        }
+        .completed:hover {
+            background-color: #218838; /* Darker Green */
+        }
+        .completed::after {
+            content: " ✓";
+        }
+        .disabled {
+            background-color: #6c757d; /* Gray */
+            cursor: not-allowed;
+        }
+        .restart-button {
+            background-color: #dc3545; /* Red */
+        }
+        .restart-button:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <button class="upload-button" onclick="uploadImages()" id="uploadBtn">1) เลือกรูปภาพ</button>
+    <button class="sort-button" onclick="sortImages()" disabled>2) เรียงรูปภาพ</button>
+    <button class="save-button" onclick="saveAsPDF()" disabled>3) บันทึกเป็นไฟล์ PDF</button>
+    <button class="restart-button" onclick="restart()" disabled>4) ใช้งานอีกครั้ง</button>
+    
+    <!-- Image File Input -->
+    <input type="file" id="imageInput" multiple accept="image/*" style="display: none;">
+    
+    <!-- Image Gallery -->
+    <div class="gallery" id="gallery"></div>
+
+    <script>
+        let imagesArray = [];
+        let imageSettings = {};
+
+        // SweetAlert prompt to get image range, extension, size, rows, and columns
+        Swal.fire({
+            title: 'ตั้งค่า (แก้ไขตรงส่วนนี้ไม่ได้)',
+            html: `   
+                <label>จำนวนคอลัมน์ต่อหน้า: <input type="number" id="columns" value="1" readonly></label><br><br>
+                <label>จำนวนแถวต่อหน้า: <input type="number" id="rows" value="2" readonly></label>
+            `,
+            confirmButtonText: 'บันทึกการตั้งค่า',
+            preConfirm: () => {
+                return {
+                    columns: document.getElementById('columns').value,
+                    rows: document.getElementById('rows').value
+                };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                imageSettings = result.value;
+            }
+        });
+
+        const imageInput = document.getElementById('imageInput');
+        const gallery = document.getElementById('gallery');
+
+        // Function to trigger image upload
+        function uploadImages() {
+            imageInput.click(); // Trigger file input click
+        }
+
+        imageInput.addEventListener('change', (event) => {
+            const files = Array.from(event.target.files);
+            imagesArray = []; // Clear the existing array
+
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagesArray.push({ name: file.name, src: e.target.result });
+                };
+                reader.readAsDataURL(file);
+            });
+
+            // Enable the "Sort Images" button once files are uploaded
+            document.querySelector('.sort-button').disabled = false;
+            updateButtonState('upload'); // Mark step 1 as completed
+            document.querySelector('#uploadBtn').classList.add('disabled'); // Disable upload button
+        });
+
+        // Function to sort images by filename number
+        function sortImages() {
+            imagesArray.sort((a, b) => {
+                const numA = parseInt(a.name.match(/\d+/) ? a.name.match(/\d+/)[0] : 0);
+                const numB = parseInt(b.name.match(/\d+/) ? b.name.match(/\d+/)[0] : 0);
+                return numA - numB; // Sort by number in the filename
+            });
+
+            // Enable the "Save as PDF" button after sorting
+            document.querySelector('.save-button').disabled = false;
+            updateButtonState('sort'); // Mark step 2 as completed
+
+            // Display images in the gallery after sorting
+            displayImages();
+        }
+
+        // Function to display images in the gallery
+        function displayImages() {
+            gallery.innerHTML = ''; // Clear existing images
+
+            // Set the grid layout based on columns and rows
+            const { columns, rows } = imageSettings;
+            gallery.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+            gallery.style.gridTemplateRows = `repeat(${rows}, auto)`;
+
+            imagesArray.forEach(image => {
+                const img = document.createElement('img');
+                img.src = image.src;
+                img.alt = image.name;
+                gallery.appendChild(img);
+            });
+        }
+
+        // Function to save the gallery as PDF
+        async function saveAsPDF() {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ format: 'a4' });
+            const images = document.querySelectorAll('.gallery img');
+            const columns = parseInt(imageSettings.columns);
+            const rows = parseInt(imageSettings.rows);
+
+            const pageWidth = 210; // A4 width in mm
+            const pageHeight = 297; // A4 height in mm
+            const margin = 10;
+            const topMargin = 30;  // เพิ่มขอบบน
+            const bottomMargin =10;// เพิ่มขอบล่าง
+            const availableHeight = pageHeight - topMargin - bottomMargin;
+
+            const imgWidth = (pageWidth - margin * 2) / columns;
+            let imgHeight;
+
+            let x = margin;
+            let y = topMargin;
+            let count = 0;
+
+            for (let i = 0; i < images.length; i++) {
+                const img = images[i];
+                const imgData = await toDataURL(img.src);
+                const aspectRatio = img.naturalWidth / img.naturalHeight;
+                imgHeight = imgWidth / aspectRatio;
+
+                // Set the alignment to the left (not centered)
+                pdf.addImage(imgData, 'JPEG', x, y, imgWidth, imgHeight);
+                count++;
+
+                if (count % columns === 0) {
+                    x = margin; // reset x to left margin
+                    y += imgHeight + 10;
+                } else {
+                    x += imgWidth + 10;
+                }
+
+                if (count % (columns * rows) === 0 && i !== images.length - 1) {
+                    pdf.addPage();
+                    x = margin; // reset x for new page
+                    y = topMargin; // reset y for new page to top margin
+                }
+
+                // Check if the remaining space on the page is too small for another image
+                if (y + imgHeight > availableHeight) {
+                    pdf.addPage();
+                    x = margin; // reset x for new page
+                    y = topMargin; // reset y to top margin
+                }
+            }
+
+            pdf.save('รวมไฟล์สไลด์.pdf');
+            updateButtonState('save'); // Mark step 3 as completed
+            document.querySelector('.restart-button').disabled = false; // Enable restart button
+        }
+
+        // Utility function to convert image to Data URL
+        function toDataURL(url) {
+            return fetch(url)
+                .then(response => response.blob())
+                .then(blob => new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                }));
+        }
+
+        // Function to update button state after completion of each step
+        function updateButtonState(step) {
+            if (step === 'upload') {
+                const uploadButton = document.querySelector('.upload-button');
+                uploadButton.classList.add('completed');
+            } else if (step === 'sort') {
+                const sortButton = document.querySelector('.sort-button');
+                sortButton.classList.add('completed');
+            } else if (step === 'save') {
+                const saveButton = document.querySelector('.save-button');
+                saveButton.classList.add('completed');
+            }
+        }
+
+        // Function to restart the process and refresh the page
+        function restart() {
+            location.reload(); // Refresh the page to restart the process
+        }
+    </script>
+</body>
+</html>
