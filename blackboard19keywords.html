@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สุ่มคำถามนางงาม</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background: #2c3e50; /* เปลี่ยนพื้นหลังให้มืดเพื่อให้ตัวหนังสือเด่น */
+            color: #ecf0f1; /* สีตัวหนังสือให้สว่าง */
+        }
+
+        .container {
+            text-align: center;
+            padding: 40px;
+            background: #34495e;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+        }
+
+        h1 {
+            font-size: 48px; /* ขนาดตัวหนังสือใหญ่ */
+            margin-bottom: 30px;
+            color: #f39c12; /* สีทองให้เด่น */
+        }
+
+        .keyword {
+            font-size: 60px; /* ขนาดตัวหนังสือใหญ่สุด */
+            font-weight: bold;
+            margin: 40px 0;
+            color: #ffffff; /* สีแดงสด */
+            min-height: 100px;
+        }
+
+        button {
+            background-color: #f39c12;
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            margin: 10px;
+        }
+
+        button:hover {
+            background-color: #e67e22;
+            transform: scale(1.1); /* ขยายปุ่มเมื่อวางเมาส์ */
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 36px;
+            }
+
+            button {
+                font-size: 18px;
+                padding: 15px 30px;
+            }
+
+            .keyword {
+                font-size: 48px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>สุ่มคำถามสำหรับนางงาม</h1>
+        <div class="keyword" id="keyword">กดปุ่มเพื่อเริ่มสุ่ม</div>
+        <button id="toggleButton">เริ่มสุ่ม</button>
+    </div>
+
+    <script>
+        const apiUrl = 'https://sheets.googleapis.com/v4/spreadsheets/1tzccNv84EwgoiW3KR99_giJqJyhi8Yq-_HXo_9MnZgY/values/keywords?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE';
+
+        let keywords = [];
+        let intervalId = null;
+        let isRunning = false;
+
+        async function fetchKeywords() {
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                keywords = data.values.slice(1).map(row => row[0]); // เอาคอลัมน์ A ยกเว้นแถวแรก
+            } catch (error) {
+                console.error('Error fetching keywords:', error);
+                keywords = [];
+            }
+        }
+
+        function startRandom() {
+            if (keywords.length === 0) return;
+
+            const keywordElement = document.getElementById('keyword');
+            intervalId = setInterval(() => {
+                const randomKeyword = keywords[Math.floor(Math.random() * keywords.length)];
+                keywordElement.textContent = randomKeyword;
+            }, 50);
+        }
+
+        function stopRandom() {
+            clearInterval(intervalId);
+            intervalId = null;
+        }
+
+        document.getElementById('toggleButton').addEventListener('click', async () => {
+            const button = document.getElementById('toggleButton');
+
+            if (!isRunning) {
+                if (keywords.length === 0) {
+                    document.getElementById('keyword').textContent = 'กำลังโหลดคำถาม...';
+                    await fetchKeywords();
+                }
+                startRandom();
+                button.textContent = 'หยุด';
+                isRunning = true;
+            } else {
+                stopRandom();
+                button.textContent = 'เริ่มสุ่ม';
+                isRunning = false;
+            }
+        });
+    </script>
+</body>
+</html>
