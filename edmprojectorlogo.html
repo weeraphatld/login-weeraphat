@@ -31,29 +31,34 @@
         transform: scale(1);
       }
       50% {
-        transform: scale(1.3);
+        transform: scale(1.1);
       }
+    }
+
+    .flash {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.3);
+      opacity: 0;
+      transition: opacity 0.3s ease-out;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <img src="https://lh5.googleusercontent.com/d/1Gs7i1RfVBGyvgLPLHe2SGrMcvyWZlnF0" alt="Fun Image" class="image">
+    <img src="https://lh5.googleusercontent.com/d/1Gs7i1RfVBGyvgLPLHe2SGrMcvyWZlnF0" alt="Fun Image" class="image" id="image">
   </div>
   <script>
-    // เพิ่มเอฟเฟกต์แสงแฟลช
-    const container = document.querySelector('.container');
+    const image = document.getElementById('image');
+
+    // เพิ่มเอฟเฟกต์แสงแฟลชเฉพาะตรงรูปภาพ
     setInterval(() => {
       const flash = document.createElement('div');
-      flash.style.position = 'absolute';
-      flash.style.top = '0';
-      flash.style.left = '0';
-      flash.style.width = '100vw';
-      flash.style.height = '100vh';
-      flash.style.background = 'rgba(255, 255, 255, 0.2)';
-      flash.style.opacity = '0';
-      flash.style.transition = 'opacity 0.3s ease-out';
-      container.appendChild(flash);
+      flash.classList.add('flash');
+      image.appendChild(flash);
       requestAnimationFrame(() => {
         flash.style.opacity = '1';
       });
