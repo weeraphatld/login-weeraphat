@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>กลุ่มไหนได้ทำของหมู่บ้านอะไร</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle, #001f3f, #001030);
+            color: #00e5ff;
+            font-family: 'Courier New', Courier, monospace;
+            overflow-x: hidden;
+        }
+
+        .container {
+            margin: 50px auto;
+            padding: 20px;
+            width: 90%;
+            max-width: 800px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #00e5ff;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
+        }
+
+        h1 {
+            text-align: center;
+            color: #00e5ff;
+            text-shadow: 0 0 10px rgba(0, 229, 255, 0.7);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 1.5em; /* Increased font size */
+        }
+
+        th, td {
+            padding: 15px; /* Increased padding */
+            text-align: left;
+            border-bottom: 1px solid #00e5ff;
+        }
+
+        th {
+            background: #002b50;
+            color: #00e5ff;
+            text-shadow: 0 0 5px rgba(0, 229, 255, 0.7);
+        }
+
+        td {
+            color: #ffffff;
+        }
+
+        td:hover {
+            background: rgba(0, 229, 255, 0.2);
+            cursor: pointer;
+        }
+
+        .loading {
+            text-align: center;
+            color: #00e5ff;
+            font-size: 1.5em; /* Increased font size */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Operation Cosmos Quest</h1>
+        <div id="loading" class="loading">Loading data...</div>
+        <table id="dataTable" style="display:none;">
+            <thead>
+                <tr>
+                    <th>Spaceship Name</th>
+                    <th>Assigned Village</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data will be injected here dynamically -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const apiUrl = "https://sheets.googleapis.com/v4/spreadsheets/1JkEVvbSuVNrCRLyDEPa_XFuPYIVOCc0S6eDpk8UNM7g/values/spaceshipandvillage?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE";
+        const table = document.getElementById("dataTable");
+        const loading = document.getElementById("loading");
+
+        async function fetchData() {
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                const rows = data.values.slice(1); // Skip the first row (header)
+                const tbody = table.querySelector("tbody");
+
+                rows.forEach(row => {
+                    const [spaceship, village] = row;
+                    const tr = document.createElement("tr");
+                    
+                    const spaceshipCell = document.createElement("td");
+                    spaceshipCell.textContent = spaceship;
+
+                    const villageCell = document.createElement("td");
+                    villageCell.textContent = village;
+
+                    tr.appendChild(spaceshipCell);
+                    tr.appendChild(villageCell);
+
+                    tbody.appendChild(tr);
+                });
+
+                loading.style.display = "none";
+                table.style.display = "table";
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                loading.textContent = "Failed to load data. Please try again later.";
+            }
+        }
+
+        fetchData();
+    </script>
+</body>
+</html>
