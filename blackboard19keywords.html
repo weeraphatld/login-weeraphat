@@ -3,84 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@100;300;400;700&display=swap" rel="stylesheet">
     <title>สุ่มคำถามนางงาม</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            margin: 0;
+            font-family: 'Noto Sans Thai', sans-serif;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #000428, #004e92);
+            color: #ffffff;
+            text-align: center;
             display: flex;
             flex-direction: column;
-            align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            background: #2c3e50; /* เปลี่ยนพื้นหลังให้มืดเพื่อให้ตัวหนังสือเด่น */
-            color: #ecf0f1; /* สีตัวหนังสือให้สว่าง */
+            align-items: center;
+            height: 100vh;
+            position: relative;
         }
-
-        .container {
-            text-align: center;
-            padding: 40px;
-            background: #34495e;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            border-radius: 15px;
-            max-width: 600px;
-            width: 90%;
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/stardust.png') repeat;
+            animation: moveStars 30s linear infinite;
         }
-
-        h1 {
-            font-size: 48px; /* ขนาดตัวหนังสือใหญ่ */
-            margin-bottom: 30px;
-            color: #f39c12; /* สีทองให้เด่น */
+        @keyframes moveStars {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-100%); }
         }
-
         .keyword {
-            font-size: 60px; /* ขนาดตัวหนังสือใหญ่สุด */
+            font-size: 100px;
             font-weight: bold;
             margin: 40px 0;
-            color: #ffffff; /* สีแดงสด */
+            color: #ffffff;
             min-height: 100px;
-        }
-
-        button {
-            background-color: #f39c12;
-            color: white;
-            border: none;
-            padding: 20px 40px;
-            font-size: 24px;
-            border-radius: 10px;
+            z-index: 1;
             cursor: pointer;
-            transition: background-color 0.3s, transform 0.2s;
-            margin: 10px;
+            user-select: none;
         }
-
-        button:hover {
-            background-color: #e67e22;
-            transform: scale(1.1); /* ขยายปุ่มเมื่อวางเมาส์ */
-        }
-
-        @media (max-width: 480px) {
-            h1 {
-                font-size: 36px;
-            }
-
-            button {
-                font-size: 18px;
-                padding: 15px 30px;
-            }
-
-            .keyword {
-                font-size: 48px;
-            }
+        .keyword:hover {
+            color: #1ffffd;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>สุ่มคำถามสำหรับนางงาม</h1>
-        <div class="keyword" id="keyword">กดปุ่มเพื่อเริ่มสุ่ม</div>
-        <button id="toggleButton">เริ่มสุ่ม</button>
-    </div>
-
+    <div class="stars"></div>
+    <div class="keyword" id="keyword">กดที่นี่เพื่อสุ่ม</div>
+    
     <script>
         const apiUrl = 'https://sheets.googleapis.com/v4/spreadsheets/1tzccNv84EwgoiW3KR99_giJqJyhi8Yq-_HXo_9MnZgY/values/keywords?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE';
 
@@ -92,7 +61,7 @@
             try {
                 const response = await fetch(apiUrl);
                 const data = await response.json();
-                keywords = data.values.slice(1).map(row => row[0]); // เอาคอลัมน์ A ยกเว้นแถวแรก
+                keywords = data.values.slice(1).map(row => row[0]);
             } catch (error) {
                 console.error('Error fetching keywords:', error);
                 keywords = [];
@@ -101,7 +70,6 @@
 
         function startRandom() {
             if (keywords.length === 0) return;
-
             const keywordElement = document.getElementById('keyword');
             intervalId = setInterval(() => {
                 const randomKeyword = keywords[Math.floor(Math.random() * keywords.length)];
@@ -114,20 +82,24 @@
             intervalId = null;
         }
 
-        document.getElementById('toggleButton').addEventListener('click', async () => {
-            const button = document.getElementById('toggleButton');
+        function removeKeyword(selectedKeyword) {
+            keywords = keywords.filter(keyword => keyword !== selectedKeyword);
+        }
 
+        document.getElementById('keyword').addEventListener('click', async () => {
+            const keywordElement = document.getElementById('keyword');
+            
             if (!isRunning) {
                 if (keywords.length === 0) {
-                    document.getElementById('keyword').textContent = 'กำลังโหลดคำถาม...';
+                    keywordElement.textContent = 'กำลังโหลดคำถาม...';
                     await fetchKeywords();
                 }
                 startRandom();
-                button.textContent = 'หยุด';
                 isRunning = true;
             } else {
                 stopRandom();
-                button.textContent = 'เริ่มสุ่ม';
+                const selectedKeyword = keywordElement.textContent;
+                removeKeyword(selectedKeyword);
                 isRunning = false;
             }
         });
