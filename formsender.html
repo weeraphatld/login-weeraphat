@@ -84,37 +84,51 @@
         });
 
         function submitForm(event) {
-            event.preventDefault();
-            const name = document.getElementById("fullname").value;
-            const question = document.getElementById("question").value;
-            const answer = document.getElementById("answer").value;
-            
-            if (!question || !answer) {
-                Swal.fire('Error', 'กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
-                return;
-            }
+    event.preventDefault();
+    const name = document.getElementById("fullname").value;
+    const question = document.getElementById("question").value;
+    const answer = document.getElementById("answer").value;
+    
+    if (!question || !answer) {
+        Swal.fire('Error', 'กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+        return;
+    }
 
-            let formData = new FormData();
-            formData.append(entryName, name);
-            formData.append(entryQuestion, question);
-            formData.append(entryAnswer, answer);
-
-            fetch(formAction, {
-                method: "POST",
-                mode: "no-cors",
-                body: formData
-            }).then(() => {
-                Swal.fire({
-                    title: 'ส่งคำตอบเรียบร้อย!',
-                    icon: 'success',
-                    timer: 1000,
-                    showConfirmButton: false
-                }).then(() => {
-                    document.getElementById("question").value = "";
-                    document.getElementById("answer").value = "";
-                });
-            });
+    // แสดง SweetAlert loading
+    const swalLoading = Swal.fire({
+        title: 'กำลังส่งคำตอบ...',
+        html: 'กรุณารอสักครู่',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
         }
+    });
+
+    let formData = new FormData();
+    formData.append(entryName, name);
+    formData.append(entryQuestion, question);
+    formData.append(entryAnswer, answer);
+
+    fetch(formAction, {
+        method: "POST",
+        mode: "no-cors",
+        body: formData
+    }).then(() => {
+        swalLoading.close(); // ปิด SweetAlert loading
+        Swal.fire({
+            title: 'ส่งคำตอบเรียบร้อย!',
+            icon: 'success',
+            timer: 1000,
+            showConfirmButton: false
+        }).then(() => {
+            document.getElementById("question").value = "";
+            document.getElementById("answer").value = "";
+        });
+    }).catch(() => {
+        swalLoading.close(); // ปิด SweetAlert loading
+        Swal.fire('Error', 'ไม่สามารถส่งคำตอบได้', 'error');
+    });
+}
     </script>
 </body>
 </html>
