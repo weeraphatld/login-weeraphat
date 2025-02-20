@@ -21,6 +21,14 @@
                             <input type="text" id="fullname" name="fullname" class="form-control" readonly>
                         </div>
                         <div class="mb-3">
+                            <label for="zone" class="form-label">Zone</label>
+                            <input type="text" id="zone" name="zone" class="form-control" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="groupname" class="form-label">Group Name</label>
+                            <input type="text" id="groupname" name="groupname" class="form-control" readonly>
+                        </div>
+                        <div class="mb-3">
                             <label for="question" class="form-label">Select the question.</label>
                             <select id="question" name="question" class="form-select">
                                 <option value="">-- เลือกข้อที่ต้องการตอบ --</option>
@@ -52,6 +60,8 @@
     <script>
         let formAction = "";
         let entryName = "";
+        let entryZone = "";
+        let entryGroupname = "";
         let entryQuestion = "";
         let entryAnswer = "";
 
@@ -76,9 +86,13 @@
                     
                     formAction = `https://docs.google.com/forms/u/0/d/e/${foundRow[5]}/formResponse`;
                     document.getElementById("fullname").value = foundRow[2];
+                    document.getElementById("zone").value = foundRow[4];
+                    document.getElementById("groupname").value = foundRow[12];
                     entryName = `entry.${foundRow[6]}`;
                     entryQuestion = `entry.${foundRow[7]}`;
                     entryAnswer = `entry.${foundRow[8]}`;
+                    entryZone = `entry.${foundRow[13]}`;
+                    entryGroupname = `entry.${foundRow[14]}`;
                 })
                 .catch(() => Swal.fire('Error', 'ไม่สามารถโหลดข้อมูลได้', 'error'));
         });
@@ -88,6 +102,8 @@
     const name = document.getElementById("fullname").value;
     const question = document.getElementById("question").value;
     const answer = document.getElementById("answer").value;
+    const zone = document.getElementById("zone").value;
+    const groupname = document.getElementById("groupname").value;
     
     if (!question || !answer) {
         Swal.fire('Error', 'กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
@@ -108,6 +124,8 @@
     formData.append(entryName, name);
     formData.append(entryQuestion, question);
     formData.append(entryAnswer, answer);
+    formData.append(entryZone, zone);
+    formData.append(entryGroupname, groupname);
 
     fetch(formAction, {
         method: "POST",
