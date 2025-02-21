@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>อันดับคะแนนของกลุ่ม</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            background-color: #fce4ec;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #d81b60;
+            font-size: 3rem;
+        }
+        .ranking-table {
+            width: 100%;
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 1.5rem;
+        }
+        th, td {
+            padding: 20px;
+            border-bottom: 2px solid #f8bbd0;
+        }
+        th {
+            background: #f06292;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background: #fce4ec;
+        }
+    </style>
+</head>
+<body>
+    <h1>🏆 Scoreboard 🏆</h1>
+    <div class="ranking-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Group</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody id="ranking-body">
+                <tr><td colspan="3">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <script>
+        async function fetchRanking() {
+            const url = "https://sheets.googleapis.com/v4/spreadsheets/1XGdxFGbWovpMXu-mD3YGt1fJZCUC2VmtaLF9i2rGRBg/values/preparegroup!H8:M9?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE";
+            try {
+                let response = await fetch(url);
+                let data = await response.json();
+                let groups = data.values[1]; // ชื่อกลุ่ม H9 - M9
+                let scores = data.values[0].map(Number); // แต้ม H8 - M8
+                let ranking = groups.map((group, i) => ({ name: group, score: scores[i] }))
+                                    .sort((a, b) => b.score - a.score);
+                
+                let rankMap = new Map();
+                let currentRank = 1;
+                ranking.forEach((team, index) => {
+                    if (index > 0 && ranking[index - 1].score !== team.score) {
+                        currentRank = index + 1;
+                    }
+                    rankMap.set(team.name, currentRank);
+                });
+                
+                let tbody = document.getElementById("ranking-body");
+                tbody.innerHTML = "";
+                ranking.forEach((team) => {
+                    let row = `<tr>
+                        <td>${rankMap.get(team.name)}</td>
+                        <td>${team.name}</td>
+                        <td>${team.score}</td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            } catch (error) {
+                console.error("เกิดข้อผิดพลาดในการโหลดข้อมูล", error);
+            }
+        }
+        fetchRanking();
+    </script>
+</body>
+</html>
