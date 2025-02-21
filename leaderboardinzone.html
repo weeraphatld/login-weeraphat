@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 800px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="text-center mb-4">Leaderboard Zone <span id="zoneName"></span></h2>
+        <div class="mb-3">
+            <label for="questionFilter" class="form-label">เลือกคำถาม:</label>
+            <select id="questionFilter" class="form-select">
+                <option value="">ทั้งหมด</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+            </select>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>กลุ่ม</th>
+                        <th>ชื่อ</th>
+                        <th>คำตอบ</th>
+                        <th>เวลาที่ส่ง</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboardBody"></tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        const apiUrl = "https://sheets.googleapis.com/v4/spreadsheets/1dJAZWL2SuddInjH9pQihjlw-Ram_CPpkfa5R-7A1AMw/values/Sheet1?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE";
+        const urlParams = new URLSearchParams(window.location.search);
+        const zoneParam = urlParams.get('zone') || "A";
+        const questionFilter = document.getElementById("questionFilter");
+        
+        async function fetchData() {
+            const response = await fetch(apiUrl);
+            const data = await response.json();
+            const rows = data.values.slice(1); // ตัดหัวตารางออก
+            renderTable(rows);
+        }
+
+        function renderTable(rows) {
+            const selectedQuestion = questionFilter.value;
+            const tbody = document.getElementById("leaderboardBody");
+            tbody.innerHTML = "";
+
+            const filteredRows = rows.filter(row => 
+                row[5] === zoneParam && (selectedQuestion === "" || row[2] === selectedQuestion)
+            );
+            
+            filteredRows.forEach(row => {
+                const timeParts = row[0].split(" ")[1]; // แยกเวลาออกจากวันที่
+                const tr = document.createElement("tr");
+                tr.innerHTML = `<td>${row[4]}</td><td>${row[1]}</td><td>${row[3]}</td><td>${timeParts}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        questionFilter.addEventListener("change", fetchData);
+
+        document.getElementById("zoneName").textContent = zoneParam;
+        fetchData();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
