@@ -91,8 +91,8 @@
                     entryName = `entry.${foundRow[6]}`;
                     entryQuestion = `entry.${foundRow[7]}`;
                     entryAnswer = `entry.${foundRow[8]}`;
-                    entryZone = `entry.${foundRow[13]}`;
-                    entryGroupname = `entry.${foundRow[14]}`;
+                    entryZone = `entry.${foundRow[14]}`;
+                    entryGroupname = `entry.${foundRow[15]}`;
                 })
                 .catch(() => Swal.fire('Error', 'ไม่สามารถโหลดข้อมูลได้', 'error'));
         });
@@ -112,8 +112,8 @@
 
     // แสดง SweetAlert loading
     const swalLoading = Swal.fire({
-        title: 'กำลังส่งคำตอบ...',
-        html: 'กรุณารอสักครู่',
+        title: 'Sending Answer...',
+        html: 'Please Wait',
         allowOutsideClick: false,
         didOpen: () => {
             Swal.showLoading();
@@ -134,7 +134,7 @@
     }).then(() => {
         swalLoading.close(); // ปิด SweetAlert loading
         Swal.fire({
-            title: 'ส่งคำตอบเรียบร้อย!',
+            title: 'Form submitted successfully!',
             icon: 'success',
             timer: 1000,
             showConfirmButton: false
