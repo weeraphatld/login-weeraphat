@@ -25,7 +25,7 @@
     <div class="row justify-content-center">
       <div class="col-md-6">
         <div class="card">
-          <h5 class="card-header text-center">A Scroll to the Treasure</h5>
+          <h5 id="game-title" class="card-header text-center">Loading...</h5>
           <div class="card-body">
             <form id="passwordForm">
               <div id="form-content">
@@ -64,6 +64,8 @@ async function loadGameData() {
       return;
     }
 
+    document.getElementById("game-title").textContent = gameData[5] || "Untitled"; // ใช้คอลัมน์ F เป็นชื่อเกม
+    
     correctAnswers = gameData[1].split(',');
     const options = gameData[2].split(',');
     redirectUrl = gameData[4] || ""; // ใช้คอลัมน์ E เป็นลิงก์เปลี่ยนหน้า
