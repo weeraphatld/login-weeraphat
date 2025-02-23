@@ -123,7 +123,7 @@ function checkPassword() {
   if (userAnswers.every((answer, index) => answer === correctAnswers[index])) {
     Swal.fire({
       icon: 'success',
-      title: 'The password is correct.',
+      title: 'รหัสผ่านถูกต้อง',
       timer: 1500,
       timerProgressBar: true,
       showConfirmButton: false,
@@ -135,7 +135,7 @@ function checkPassword() {
   } else {
     Swal.fire({
       icon: 'error',
-      title: 'Incorrect password',
+      title: 'รหัสผ่านไม่ถูกต้อง',
       timer: 1500,
       timerProgressBar: true,
       showConfirmButton: false,
