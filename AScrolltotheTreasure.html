@@ -10,11 +10,9 @@
     .form-group {
       margin-bottom: 20px;
     }
-
     select {
       background-color: #f9f9f9;
     }
-
     .btn-block {
       width: 100%;
     }
@@ -27,11 +25,10 @@
         <div class="card">
           <h5 id="game-title" class="card-header text-center">Loading...</h5>
           <div class="card-body">
+            <div id="hearts" class="text-center my-3"></div>
             <form id="passwordForm">
-              <div id="form-content">
-                <!-- ตัวเลือกจะถูกสร้างจาก JavaScript -->
-              </div>
-              <button type="button" class="btn btn-primary btn-block" onclick="checkPassword()">ตรวจสอบ</button>
+              <div id="form-content"></div>
+              <button id="checkBtn" type="button" class="btn btn-primary btn-block" onclick="checkPassword()" disabled>ตรวจสอบ</button>
             </form>
           </div>
         </div>
@@ -46,31 +43,23 @@ const apiUrl = "https://sheets.googleapis.com/v4/spreadsheets/1JkEVvbSuVNrCRLyDE
 
 let correctAnswers = [];
 let redirectUrl = "";
+let attemptsLeft = localStorage.getItem("attemptsLeft") ? parseInt(localStorage.getItem("attemptsLeft")) : 5;
 
 async function loadGameData() {
   try {
     const response = await fetch(apiUrl);
     const data = await response.json();
     const rows = data.values;
-
-    // หาข้อมูลตาม targetid
     const gameData = rows.find(row => row[0] === targetId);
     if (!gameData) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'ไม่พบข้อมูลสำหรับ Target ID นี้',
-      });
+      Swal.fire({ icon: 'error', title: 'Error', text: 'ไม่พบข้อมูลสำหรับ Target ID นี้' });
       return;
     }
 
-    document.getElementById("game-title").textContent = gameData[5] || "Untitled"; // ใช้คอลัมน์ F เป็นชื่อเกม
-    
+    document.getElementById("game-title").textContent = gameData[5] || "Untitled";
     correctAnswers = gameData[1].split(',');
     const options = gameData[2].split(',');
-    redirectUrl = gameData[4] || ""; // ใช้คอลัมน์ E เป็นลิงก์เปลี่ยนหน้า
-
-    // สร้างฟอร์มจากข้อมูลที่โหลดมา
+    redirectUrl = gameData[4] || "";
     const formContent = document.getElementById('form-content');
     formContent.innerHTML = '';
 
@@ -79,6 +68,7 @@ async function loadGameData() {
       select.className = 'form-select';
       select.id = `char${index + 1}`;
       select.required = true;
+      select.addEventListener("change", validateForm);
 
       const defaultOption = document.createElement('option');
       defaultOption.value = '';
@@ -105,41 +95,46 @@ async function loadGameData() {
 
       formContent.appendChild(formGroup);
     });
+    updateHearts();
   } catch (error) {
     console.error('Error loading game data:', error);
-    Swal.fire({
-      icon: 'error',
-      title: 'Error',
-      text: 'เกิดข้อผิดพลาดในการโหลดข้อมูล',
-    });
+    Swal.fire({ icon: 'error', title: 'Error', text: 'เกิดข้อผิดพลาดในการโหลดข้อมูล' });
   }
 }
 
-function checkPassword() {
-  const userAnswers = correctAnswers.map((_, index) => {
-    return document.getElementById(`char${index + 1}`).value;
-  });
+function updateHearts() {
+  const heartsDiv = document.getElementById("hearts");
+  heartsDiv.innerHTML = "❤️".repeat(attemptsLeft) + "🤍".repeat(5 - attemptsLeft);
+}
 
+function validateForm() {
+  const allAnswered = correctAnswers.every((_, index) => document.getElementById(`char${index + 1}`).value);
+  document.getElementById("checkBtn").disabled = !allAnswered;
+}
+
+function checkPassword() {
+  if (attemptsLeft <= 0) {
+    Swal.fire({ icon: 'error', title: 'หมดโอกาสแล้ว!', text: 'คุณตอบผิดครบ 5 ครั้งแล้ว' });
+    return;
+  }
+
+  const userAnswers = correctAnswers.map((_, index) => document.getElementById(`char${index + 1}`).value);
+  
   if (userAnswers.every((answer, index) => answer === correctAnswers[index])) {
-    Swal.fire({
-      icon: 'success',
-      title: 'รหัสผ่านถูกต้อง',
-      timer: 1500,
-      timerProgressBar: true,
-      showConfirmButton: false,
-    }).then(() => {
-      if (redirectUrl) {
-        window.location.href = redirectUrl;
-      }
+    Swal.fire({ icon: 'success', title: 'รหัสผ่านถูกต้อง', timer: 1500, showConfirmButton: false }).then(() => {
+      localStorage.removeItem("attemptsLeft");
+      if (redirectUrl) window.location.href = redirectUrl;
     });
   } else {
-    Swal.fire({
-      icon: 'error',
-      title: 'รหัสผ่านไม่ถูกต้อง',
-      timer: 1500,
-      timerProgressBar: true,
-      showConfirmButton: false,
-    });
+    attemptsLeft--;
+    localStorage.setItem("attemptsLeft", attemptsLeft);
+    updateHearts();
+    
+    if (attemptsLeft <= 0) {
+      Swal.fire({ icon: 'error', title: 'หมดโอกาสแล้ว!', text: 'คุณไม่สามารถตอบได้อีก' });
+    } else {
+      Swal.fire({ icon: 'error', title: 'รหัสผ่านไม่ถูกต้อง', text: `คุณมีโอกาสอีก ${attemptsLeft} ครั้ง` });
+    }
   }
 }
 
