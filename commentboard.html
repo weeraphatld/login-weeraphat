@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>กระดานแสดงความคิดเห็น by NANGSYTECH</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+        .comment-board {
+            width: 90%;
+            max-width: 1200px;
+            margin: 20px auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .comment {
+            padding: 15px;
+            border-radius: 8px;
+            background: #fff;
+            font-size: 16px;
+            text-align: left;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+        .comment:hover {
+            transform: scale(1.02);
+        }
+        .comment strong {
+            display: block;
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <h1>กระดานแสดงความคิดเห็น by NANGSYTECH</h1>
+    <div id="comments" class="comment-board">Loading...</div>
+
+    <script>
+        async function fetchComments() {
+            const url = "https://sheets.googleapis.com/v4/spreadsheets/1HprpDck_KQqvf5otG9EwThtQAR0u1kRqu9v99exsW58/values/Sheet1?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE";
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                const rows = data.values.slice(1); // ตัดแถวแรกออก
+                let commentsHtml = "";
+                
+                rows.forEach((row) => {
+                    if (row.length >= 5) {
+                        commentsHtml += `<div class='comment'>` +
+                                        `<strong>${row[4]}</strong> มาจอยแล้วจ้าา<br><br>` +
+                                        `1) จงอธิบายวิธีการหาพื้นที่ผิวของทรงกระบอกตามความเข้าใจของนักเรียน<br>` +
+                                        `"${row[2]}"<br><br>` +
+                                        `2) จงอธิบายวิธีการหาพื้นที่ผิวของปริซึมตามความเข้าใจของนักเรียน<br>` +
+                                        `"${row[3]}"</div>`;
+                    }
+                });
+                
+                document.getElementById("comments").innerHTML = commentsHtml || "ไม่มีความคิดเห็น";
+            } catch (error) {
+                document.getElementById("comments").innerHTML = "เกิดข้อผิดพลาดในการโหลดข้อมูล";
+            }
+        }
+
+        fetchComments();
+        setInterval(fetchComments, 1000); // อัปเดตข้อมูลทุก 1 วินาที
+    </script>
+</body>
+</html>
