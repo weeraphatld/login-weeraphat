@@ -43,7 +43,7 @@ const apiUrl = "https://sheets.googleapis.com/v4/spreadsheets/1JkEVvbSuVNrCRLyDE
 
 let correctAnswers = [];
 let redirectUrl = "";
-let attemptsLeft = localStorage.getItem("attemptsLeft") ? parseInt(localStorage.getItem("attemptsLeft")) : 5;
+let attemptsLeft = localStorage.getItem(`attemptsLeft_${targetId}`) ? parseInt(localStorage.getItem(`attemptsLeft_${targetId}`)) : 5;
 
 async function loadGameData() {
   try {
@@ -122,12 +122,12 @@ function checkPassword() {
   
   if (userAnswers.every((answer, index) => answer === correctAnswers[index])) {
     Swal.fire({ icon: 'success', title: 'รหัสผ่านถูกต้อง', timer: 1500, showConfirmButton: false }).then(() => {
-      localStorage.removeItem("attemptsLeft");
+      localStorage.removeItem(`attemptsLeft_${targetId}`);
       if (redirectUrl) window.location.href = redirectUrl;
     });
   } else {
     attemptsLeft--;
-    localStorage.setItem("attemptsLeft", attemptsLeft);
+    localStorage.setItem(`attemptsLeft_${targetId}`, attemptsLeft);
     updateHearts();
     
     if (attemptsLeft <= 0) {
