@@ -12,10 +12,8 @@ integrity="sha384-wEmeIV1mKuiNpC+IOBjI7aAzPcEZeedi5yW5f2yOq55WWLwNGmvvx4Um1vskeM
         display: none;
     }
     .g-signin2 {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+        text-align: center;
+        margin-top: 20px;
     }
 </style>
 <title>Login With Google Account Using JavaScript</title>
@@ -24,7 +22,19 @@ integrity="sha384-wEmeIV1mKuiNpC+IOBjI7aAzPcEZeedi5yW5f2yOq55WWLwNGmvvx4Um1vskeM
 <body>
 
 <h2 class="alert alert-primary text-center">Sign In With Google Using JavaScript</h2>
-<div class="g-signin2" data-onsuccess="onSignIn"></div>
+
+<!-- ปุ่ม Sign-In -->
+<div id="g_id_onload"
+     data-client_id="877496944315-7da07fns681t778ibl47burgqh1spoqp.apps.googleusercontent.com"
+     data-callback="handleCredentialResponse"
+     data-auto_prompt="false">
+</div>
+
+<div class="g-signin2">
+    <div class="g_id_signin" data-type="standard"></div>
+</div>
+
+<!-- แสดงข้อมูลผู้ใช้ -->
 <div class="data text-center">
     <p>Name</p>
     <p id="name" class="alert alert-success"></p>
@@ -36,32 +46,39 @@ integrity="sha384-wEmeIV1mKuiNpC+IOBjI7aAzPcEZeedi5yW5f2yOq55WWLwNGmvvx4Um1vskeM
 </div>
 
 <script>
-function onSignIn(googleUser) {
-    var profile = googleUser.getBasicProfile();
-    $("#name").text(profile.getName());
-    $("#email").text(profile.getEmail());
-    $("#image").attr('src', profile.getImageUrl()); // ✅ แก้จาก getImageUr1() เป็น getImageUrl()
-    $(".data").css("display", "block");
-    $(".g-signin2").css("display", "none");
+function handleCredentialResponse(response) {
+    const responsePayload = parseJwt(response.credential);
+    console.log("User:", responsePayload);
+
+    document.getElementById("name").textContent = responsePayload.name;
+    document.getElementById("email").textContent = responsePayload.email;
+    document.getElementById("image").src = responsePayload.picture;
+    
+    document.querySelector(".data").style.display = "block";
+    document.querySelector(".g-signin2").style.display = "none";
+}
+
+// Decode JWT Token เพื่อดึงข้อมูลผู้ใช้
+function parseJwt(token) {
+    var base64Url = token.split('.')[1];
+    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+
+    return JSON.parse(jsonPayload);
 }
 
 function signOut() {
-    gapi.load('auth2', function() {
-        var auth2 = gapi.auth2.getAuthInstance();
-        auth2.signOut().then(function () {
-            alert("You have been signed out successfully");
-            $(".g-signin2").css("display", "block");
-            $(".data").css("display", "none");
-        });
-    });
+    google.accounts.id.disableAutoSelect();
+    alert("You have been signed out successfully");
+    document.querySelector(".g-signin2").style.display = "block";
+    document.querySelector(".data").style.display = "none";
 }
 </script>
 
-<script src="https://apis.google.com/js/platform.js" async defer></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"
-integrity="sha384-p34f1UUtsS3wqzfto5wAAmdvj+osOnFyQFpp4Ua3gs/ZVWx600ypYoCJhGGScy+8"
-crossorigin="anonymous"></script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<!-- โหลด Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 
 </body>
 </html>
