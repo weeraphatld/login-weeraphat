@@ -128,6 +128,7 @@
         let isTimerRunning = false;
         let currentSetIndex = 0;
         let lastSelectedSet = null;
+        let canStartNewRandom = true; // New variable to control random start
 
         async function fetchKeywords() {
             try {
@@ -165,6 +166,7 @@
             intervalId = null;
             document.getElementById('buttonContainer').style.display = 'flex';
             updateTimerDisplay();
+            canStartNewRandom = false; // Prevent starting new random until finish
         }
 
         function removeKeywordSet(selectedSetName) {
@@ -208,6 +210,7 @@
             document.getElementById('timer').textContent = '';
             document.getElementById('toggleTimer').textContent = 'เริ่มเวลา';
             document.getElementById('buttonContainer').style.display = 'none';
+            canStartNewRandom = true; // Allow new random start after finish
         }
 
         function toggleFullScreen() {
@@ -233,14 +236,14 @@
         document.getElementById('setKeyword').addEventListener('click', async () => {
             const setKeywordElement = document.getElementById('setKeyword');
             
-            if (!isRunning) {
+            if (!isRunning && canStartNewRandom) {
                 if (keywordSets.length === 0) {
                     setKeywordElement.textContent = 'กำลังโหลดคำถาม...';
                     await fetchKeywords();
                 }
                 startRandom();
                 isRunning = true;
-            } else {
+            } else if (isRunning) {
                 stopRandom();
                 isRunning = false;
             }
