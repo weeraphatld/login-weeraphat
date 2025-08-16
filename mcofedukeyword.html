@@ -4,29 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@100;300;400;700&display=swap" rel="stylesheet">
-    <title>สุ่มคำถามนางงาม</title>
+    <title>keyword mc of edu</title>
     <style>
         body {
             margin: 0;
             font-family: 'Noto Sans Thai', sans-serif;
             overflow: auto;
-            background: url('https://lh3.googleusercontent.com/d/1KW05YIePPa-HcMg4Vii2GYTce2PcA1K4') no-repeat center center fixed;
+            background: url('https://lh3.googleusercontent.com/d/1h9CJBVKE2O7voQUCThawdnCxA0ssFk9L') no-repeat center center fixed;
             background-size: cover;
             color: #000000;
             text-align: center;
             height: 100vh;
             position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
         .set-keyword {
-            font-size: 55px;
+            font-size: 4.5vw; /* Scaled for larger screens */
             font-weight: bold;
-            min-height: 70px;
+            min-height: 5vw;
             z-index: 1;
             cursor: pointer;
             user-select: none;
             position: absolute;
             left: 50%;
-            top: 50%;
+            top: 49%; /* Adjusted for better vertical centering */
             transform: translateX(-50%);
         }
         .set-keyword:hover {
@@ -35,49 +39,49 @@
         .keyword-box {
             display: flex;
             justify-content: center;
-            gap: 72px;
-            margin: 20px 0;
+            gap: 5.3vw; /* Scaled gap for larger screens */
+            margin: 2vw 0;
             position: absolute;
             left: 50%;
-            top: 73%;
+            top: 69%; /* Adjusted for better positioning */
             transform: translateX(-50%);
         }
         .keyword {
-            font-size: 30px;
+            font-size: 1.9vw; /* Scaled for readability */
             font-weight: bold;
-            padding: 10px 20px;
+            padding: 1vw 2vw;
             background-color: #ffffff;
-            border-radius: 10px;
-            min-width: 330px;
+            border-radius: 0.8vw;
+            min-width: 20vw; /* Adjusted for proportionality */
             text-align: center;
         }
         .timer {
-            font-size: 70px;
-            margin: 20px 0;
+            font-size: 5.0vw; /* Scaled for visibility */
+            margin: 1.5vw 0;
             z-index: 1;
             position: absolute;
-            left: 95%;
-            top: 4%;
+            left: 87%; /* Adjusted for better placement */
+            top: 10%;
             transform: translateX(-50%);
         }
         .button-container {
             display: flex;
-            gap: 10px;
+            gap: 1vw;
             z-index: 1;
             position: absolute;
-            left: 95%;
-            top: 20%;
+            left: 87%; /* Adjusted for better placement */
+            top: 25%;
             transform: translateX(-50%);
         }
         button {
-            padding: 10px 20px;
-            font-size: 18px;
+            padding: 1vw 2vw;
+            font-size: 1.5vw; /* Scaled for readability */
             font-family: 'Noto Sans Thai', sans-serif;
             cursor: pointer;
             background-color: #ffffff;
             color: #333;
             border: none;
-            border-radius: 5px;
+            border-radius: 0.5vw;
             transition: background-color 0.3s;
         }
         button:hover {
@@ -85,21 +89,27 @@
         }
         .full-screen-btn {
             position: absolute;
-            bottom: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            font-size: 18px;
+            bottom: 2vw;
+            right: 2vw;
+            padding: 1vw 2vw;
+            font-size: 1.5vw;
             font-family: 'Noto Sans Thai', sans-serif;
             cursor: pointer;
             background-color: #ffffff;
             color: #333;
             border: none;
-            border-radius: 5px;
+            border-radius: 0.5vw;
             transition: background-color 0.3s;
             z-index: 1;
         }
         .full-screen-btn:hover {
             background-color: #f0f0f0;
+        }
+        @media only screen and (min-resolution: 192dpi) {
+            /* Adjustments for Retina displays */
+            .set-keyword, .keyword, button, .full-screen-btn, .timer {
+                font-weight: 400; /* Slightly lighter for crisp rendering */
+            }
         }
     </style>
 </head>
@@ -115,7 +125,6 @@
         <button id="toggleTimer">เริ่มเวลา</button>
         <button id="finishButton">เสร็จสิ้น</button>
     </div>
-    <button id="fullScreenBtn" class="full-screen-btn">เต็มจอ</button>
 
     <script>
         const apiUrl = 'https://sheets.googleapis.com/v4/spreadsheets/1tzccNv84EwgoiW3KR99_giJqJyhi8Yq-_HXo_9MnZgY/values/keywordmc?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE';
@@ -128,7 +137,7 @@
         let isTimerRunning = false;
         let currentSetIndex = 0;
         let lastSelectedSet = null;
-        let canStartNewRandom = true; // New variable to control random start
+        let canStartNewRandom = true;
 
         async function fetchKeywords() {
             try {
@@ -166,7 +175,7 @@
             intervalId = null;
             document.getElementById('buttonContainer').style.display = 'flex';
             updateTimerDisplay();
-            canStartNewRandom = false; // Prevent starting new random until finish
+            canStartNewRandom = false;
         }
 
         function removeKeywordSet(selectedSetName) {
@@ -210,7 +219,7 @@
             document.getElementById('timer').textContent = '';
             document.getElementById('toggleTimer').textContent = 'เริ่มเวลา';
             document.getElementById('buttonContainer').style.display = 'none';
-            canStartNewRandom = true; // Allow new random start after finish
+            canStartNewRandom = true;
         }
 
         function toggleFullScreen() {
