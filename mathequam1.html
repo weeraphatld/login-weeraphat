@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💖 เกมจับคู่สมการสุดคิ้วท์ 💖</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;700&family=Mali:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <style>
+        /* CSS ทั้งหมดเหมือนเดิม ไม่มีการเปลี่ยนแปลง */
+        :root {
+            --primary-color: #ff69b4; /* Hot Pink */
+            --secondary-color: #ffb6c1; /* Light Pink */
+            --tertiary-color: #ffe4e1; /* Misty Rose */
+            --correct-color: #66bb6a; /* Green for correct */
+            --incorrect-color: #ef5350; /* Red for incorrect */
+            --bg-color: #fff0f5; /* Lavender Blush */
+            --card-bg: #ffffff;
+            --text-color: #4a4a4a;
+            --border-radius: 18px;
+            --box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Mali', cursive, 'Kanit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            background-image: url('https://www.transparenttextures.com/patterns/hearts.png');
+        }
+        .game-container {
+            width: 100%;
+            max-width: 1000px;
+            background-color: var(--card-bg);
+            padding: 35px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            text-align: center;
+            border: 3px solid var(--secondary-color);
+        }
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px var(--tertiary-color);
+        }
+        .game-main-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 40px;
+            margin-bottom: 35px;
+        }
+        #equations-list {
+            flex: 1.5;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        #answer-options {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            padding: 20px;
+            border-radius: 15px;
+            background-color: #fffafc;
+            border: 2px dashed var(--secondary-color);
+            align-self: stretch;
+        }
+        .equation-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: var(--tertiary-color);
+            padding: 18px 25px;
+            border-radius: 15px;
+            border: 1px solid var(--secondary-color);
+            font-size: 1.3rem;
+            font-weight: 500;
+            color: #5d3a5e;
+        }
+        .equation-text { margin-right: 15px; }
+        .arrow { color: var(--primary-color); font-weight: bold; font-size: 1.5rem; margin: 0 10px; }
+        .answer-input {
+            width: 160px;
+            padding: 12px;
+            border: 3px dashed var(--secondary-color);
+            border-radius: 10px;
+            font-family: 'Mali', cursive, sans-serif;
+            font-size: 1.2rem;
+            text-align: center;
+            color: var(--text-color);
+            background-color: #fffaf0;
+            transition: border-color 0.3s, background-color 0.3s, box-shadow 0.3s;
+        }
+        .answer-input::placeholder { color: #d1a7b0; }
+        .answer-input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 8px rgba(255, 105, 180, 0.4); background-color: #ffffff; }
+        .answer-input.correct { border-color: var(--correct-color); background-color: #e6ffe6; }
+        .answer-input.incorrect { border-color: var(--incorrect-color); background-color: #ffe6e6; }
+        
+        .answer-card {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: grab;
+            user-select: none;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+            transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s;
+            border: 2px solid var(--secondary-color);
+        }
+        .answer-card:hover { transform: translateY(-5px) rotate(-2deg); box-shadow: 0 6px 12px rgba(0,0,0,0.2); background-color: #ff85c2; }
+        .answer-card:active { cursor: grabbing; transform: scale(0.95); }
+        
+        #check-btn {
+            background-color: var(--correct-color);
+            color: white;
+            border: none;
+            padding: 18px 35px;
+            font-size: 1.4rem;
+            font-family: 'Kanit', sans-serif;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        #check-btn:hover { background-color: #5cb85c; transform: translateY(-2px); }
+        
+        #feedback {
+            margin-top: 25px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            height: 35px;
+            color: var(--text-color);
+        }
+        
+        @media (max-width: 900px) {
+            .game-main-area { flex-direction: column; gap: 30px; }
+            #answer-options { border-top: 2px dashed var(--secondary-color); border-left: none; padding-top: 25px; width: 100%; box-sizing: border-box; }
+        }
+        @media (max-width: 500px) {
+            .game-container { padding: 15px; border-radius: 12px; }
+            h1 { font-size: 1.6rem; margin-bottom: 20px; }
+            .equation-item { flex-direction: column; align-items: flex-start; gap: 8px; padding: 10px; font-size: 1rem; }
+            .arrow { display: none; }
+            .answer-input { width: 100%; font-size: 1rem; padding: 8px; }
+            #answer-options { gap: 10px; padding-top: 15px; }
+            .answer-card { padding: 10px 20px; font-size: 1rem; }
+            #check-btn { font-size: 1.1rem; padding: 12px 25px; }
+            #feedback { font-size: 1.1rem; height: 30px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <h1>💖จับคู่สมการ💖</h1>
+        <div class="game-main-area">
+            <div id="equations-list"></div>
+            <div id="answer-options"></div>
+        </div>
+        <button id="check-btn">ตรวจคำตอบ ✨</button>
+        <p id="feedback"></p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const questions = [
+                { equation: 'x + 15 = 27', answer: '12' },
+                { equation: '3x + 1 = 16', answer: '5' },
+                { equation: 'y + 5 = y + 5', answer: 'ทุกจำนวน' },
+                { equation: 'a - 7 = a - 5', answer: 'ไม่มีคำตอบ' }
+            ];
+            const extraAnswers = ['10', '7', '8', '15', '4', '1', '13', '17'];
+            const equationsList = document.getElementById('equations-list');
+            const answerOptions = document.getElementById('answer-options');
+            const checkBtn = document.getElementById('check-btn');
+            const feedback = document.getElementById('feedback');
+
+            const correctSound = new Audio('https://www.myinstants.com/media/sounds/anime-wow-sound-effect.mp3');
+            const incorrectSound = new Audio('https://www.myinstants.com/media/sounds/shocked-sound-effect.mp3');
+
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+            
+            function initializeGame() {
+                equationsList.innerHTML = '';
+                answerOptions.innerHTML = '';
+                feedback.textContent = '';
+                const allPossibleAnswers = [...new Set([...questions.map(q => q.answer), ...extraAnswers])];
+                const shuffledAnswers = shuffleArray(allPossibleAnswers);
+                questions.forEach((q, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'equation-item';
+                    const equationText = document.createElement('span');
+                    equationText.className = 'equation-text';
+                    
+                    // --- START: นี่คือส่วนที่แก้ไข ---
+                    equationText.innerHTML = q.equation;
+                    // --- END: นี่คือส่วนที่แก้ไข ---
+
+                    const arrow = document.createElement('span');
+                    arrow.className = 'arrow';
+                    arrow.textContent = '➡️';
+                    const input = document.createElement('input');
+                    input.className = 'answer-input';
+                    input.type = 'text';
+                    input.placeholder = '[____]';
+                    input.dataset.correct = q.answer;
+                    input.id = `input-${index}`;
+                    input.addEventListener('dragover', (e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--primary-color)'; });
+                    input.addEventListener('dragleave', (e) => { e.currentTarget.style.borderColor = ''; });
+                    input.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        const data = e.dataTransfer.getData('text/plain');
+                        e.target.value = data;
+                        e.target.classList.remove('correct', 'incorrect');
+                        e.currentTarget.style.borderColor = '';
+                    });
+                    item.appendChild(equationText);
+                    item.appendChild(arrow);
+                    item.appendChild(input);
+                    equationsList.appendChild(item);
+                });
+                shuffledAnswers.forEach(ans => {
+                    const card = document.createElement('div');
+                    card.className = 'answer-card';
+                    card.textContent = ans;
+                    card.draggable = true;
+                    card.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', e.target.textContent); e.target.style.opacity = '0.7'; });
+                    card.addEventListener('dragend', (e) => { e.target.style.opacity = '1'; });
+                    answerOptions.appendChild(card);
+                });
+            }
+
+            function checkAnswers() {
+                const inputs = document.querySelectorAll('.answer-input');
+                let correctCount = 0;
+                inputs.forEach(input => {
+                    const userAnswer = input.value.trim().toLowerCase();
+                    const correctAnswer = input.dataset.correct.toLowerCase();
+                    input.classList.remove('correct', 'incorrect');
+                    if (userAnswer === correctAnswer) {
+                        input.classList.add('correct');
+                        correctCount++;
+                    } else {
+                        input.classList.add('incorrect');
+                    }
+                });
+
+                correctSound.pause();
+                correctSound.currentTime = 0;
+                incorrectSound.pause();
+                incorrectSound.currentTime = 0;
+
+                if (correctCount === questions.length) {
+                    feedback.textContent = `🎉 ยอดเยี่ยม! คุณตอบถูกทั้งหมด ${correctCount} ข้อเลย! ✨`;
+                    feedback.style.color = 'var(--correct-color)';
+                    correctSound.play();
+                    confetti({
+                        particleCount: 180,
+                        spread: 120,
+                        origin: { y: 0.6 },
+                        colors: ['#ff69b4', '#ffb6c1', '#ffffff', '#fff0f5']
+                    });
+                } else {
+                    feedback.textContent = `ลองใหม่นะ! คุณตอบถูก ${correctCount} ข้อ จากทั้งหมด ${questions.length} ข้อ 💖`;
+                    feedback.style.color = 'var(--incorrect-color)';
+                    incorrectSound.play();
+                }
+            }
+
+            checkBtn.addEventListener('click', checkAnswers);
+            initializeGame();
+        });
+    </script>
+
+</body>
+</html>
