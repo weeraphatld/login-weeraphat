@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Content Viewer</title>
+    <style>
+        /* --- CSS สำหรับการแสดงผลเต็มหน้าจอ --- */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden; /* ป้องกัน scrollbar ในหน้าหลัก */
+            font-family: 'Kanit', sans-serif, Arial;
+            background-color: #f0f0f0; /* สีพื้นหลังเผื่อกรณีโหลดช้า */
+        }
+        #iframe-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #content-iframe {
+            width: 100%;
+            height: 100%;
+            border: none; /* ทำให้ iframe ไร้ขอบ */
+        }
+        .message {
+            padding: 40px;
+            text-align: center;
+            color: #555;
+            font-size: 1.2em;
+        }
+        /* --- จบส่วน CSS --- */
+    </style>
+</head>
+<body>
+
+    <div id="iframe-container">
+        <!-- iframe จะถูกสร้างและใส่ในนี้โดย JavaScript -->
+        <div class="message" id="initial-message">กำลังโหลด...</div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // URL ของ Google Sheets API (กรุณาใช้ Key ของคุณ)
+            const sheetUrl = 'https://sheets.googleapis.com/v4/spreadsheets/1e1RJYEo5uMUlZSpLOMsdWo8hI60J98n4UM8TBYCXN5c/values/ชีต1?alt=json&key=AIzaSyAD_aNO81AEscbG0Ij-krW7neHe6FebBDE';
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const pageId = urlParams.get('id');
+            
+            const container = document.getElementById('iframe-container');
+            const initialMessage = document.getElementById('initial-message');
+
+            if (!pageId) {
+                initialMessage.innerHTML = '<h1>ไม่พบ ID</h1><p>กรุณาระบุ ID ใน URL (ตัวอย่าง: ?id=your_id)</p>';
+                return;
+            }
+
+            fetch(sheetUrl)
+                .then(response => {
+                    if (!response.ok) throw new Error(`เกิดข้อผิดพลาด: ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
+                    if (!data.values) {
+                         initialMessage.innerHTML = '<h1>ข้อมูลว่างเปล่า</h1><p>อาจเป็นเพราะ API Key ไม่ถูกต้อง หรือชีตไม่มีข้อมูล</p>';
+                         return;
+                    }
+                    const rows = data.values.slice(1); // ดึงข้อมูลและตัดหัวตารางออก
+                    const foundRow = rows.find(row => row[0] === pageId); // ค้นหาแถวที่ตรงกับ ID
+                    
+                    container.innerHTML = ''; // ล้างข้อความ "กำลังโหลด..."
+
+                    if (foundRow && foundRow[1]) {
+                        const htmlContent = foundRow[1]; // ดึงโค้ด HTML จากคอลัมน์ B
+                        const iframe = document.createElement('iframe');
+                        iframe.id = 'content-iframe';
+                        iframe.srcdoc = htmlContent;
+                        iframe.sandbox = 'allow-scripts allow-same-origin allow-forms allow-pointer-lock'; // ตั้งค่าความปลอดภัย
+                        container.appendChild(iframe);
+                    } else {
+                        container.innerHTML = `<div class="message"><h1>ไม่พบข้อมูล</h1><p>ไม่พบเนื้อหาสำหรับ ID: <strong>${pageId}</strong></p></div>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch Error:', error);
+                    container.innerHTML = `<div class="message"><h1>เกิดข้อผิดพลาด</h1><p>ไม่สามารถโหลดข้อมูลจาก Google Sheets ได้</p><p><small>${error.message}</small></p></div>`;
+                });
+        });
+    </script>
+
+</body>
+</html>
