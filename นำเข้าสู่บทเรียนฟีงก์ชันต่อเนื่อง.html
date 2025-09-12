@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>กราฟแห่งรัก: บทนำสู่ฟังก์ชันต่อเนื่อง</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts (Kanit) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- KaTeX for LaTeX rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" xintegrity="sha384-n8MVd4RsNIU0KOVEMeaMurHnl2Goc7CUZHNhE4kJq6bOdecefEA/whORx2FEGFYS" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" xintegrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" xintegrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+        }
+        /* Custom class for scroll animation */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .katex-display {
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body class="bg-rose-50 text-slate-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-4xl">
+        <!-- Header -->
+        <header class="text-center mb-12 reveal">
+            <h1 class="text-4xl md:text-5xl font-bold text-rose-600 mb-2">กราฟแห่งรัก ❤️</h1>
+            <p class="text-xl md:text-2xl text-slate-600">บทนำสู่...ฟังก์ชันต่อเนื่อง</p>
+        </header>
+
+        <!-- Step 1: The Beginning -->
+        <section class="mb-16 reveal">
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col md:flex-row items-center">
+                <div class="p-6 md:p-8 md:w-1/2">
+                    <h2 class="text-2xl font-bold text-rose-500 mb-4">ขั้นที่ 1: จุดเริ่มต้นของความสัมพันธ์</h2>
+                    <p class="text-slate-700 leading-relaxed">
+                        ลองจินตนาการตามนะ... ถ้าเราจะเปรียบความรักเป็นเหมือน **'กราฟ'** เส้นหนึ่ง โดยให้แกน X คือ **'เวลา'** และแกน Y คือ **'ระดับความสัมพันธ์'**
+                        <br><br>
+                        ณ **จุดเริ่มต้น (t=0)** ตอนที่คนสองคนยังไม่รู้จักกัน กราฟของพวกเขาก็อาจจะยังเป็นแค่จุดสองจุดที่แยกกันอยู่ เหมือนคนแปลกหน้าที่ยังไม่เคยมีเส้นทางมาบรรจบกัน
+                    </p>
+                </div>
+                <div class="p-6 md:p-8 md:w-1/2 bg-rose-100 w-full flex justify-center items-center">
+                    <!-- SVG for Step 1 -->
+                    <svg viewBox="0 0 200 150" class="w-full max-w-xs h-auto">
+                        <defs>
+                            <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                <path d="M 0 0 L 10 5 L 0 10 z" fill="#9ca3af" />
+                            </marker>
+                        </defs>
+                        <!-- Axes -->
+                        <line x1="20" y1="130" x2="180" y2="130" stroke="#9ca3af" stroke-width="2" marker-end="url(#arrow)" />
+                        <line x1="20" y1="130" x2="20" y2="10" stroke="#9ca3af" stroke-width="2" marker-end="url(#arrow)" />
+                        <text x="170" y="145" font-size="10" fill="#6b7280">เวลา</text>
+                        <text x="5" y="15" font-size="10" fill="#6b7280" transform="rotate(-90, 10, 20)">ระดับความสัมพันธ์</text>
+                        <!-- Points -->
+                        <circle cx="60" cy="100" r="5" fill="#3b82f6" />
+                        <circle cx="140" cy="40" r="5" fill="#ec4899" />
+                    </svg>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 2: Disconnected Love -->
+        <section class="mb-16 reveal">
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                <div class="p-6 md:p-8">
+                    <h2 class="text-2xl font-bold text-rose-500 mb-4">ขั้นที่ 2: เมื่อความรัก...ไม่ต่อเนื่อง</h2>
+                    <p class="text-slate-700 leading-relaxed mb-6">
+                        แล้วถ้าวันหนึ่ง... คนหนึ่งทักไป แล้วอีกคน... **'อ่านไม่ตอบ'** ณ จุดนั้น ความสัมพันธ์มันก็เหมือนจะ **'ขาด'** ออกจากกัน เกิดเป็น **'ช่องว่าง'** ที่กราฟไม่เชื่อมกัน หรือในบางความสัมพันธ์ที่ 'เดี๋ยวดีเดี๋ยวร้าย' กราฟก็อาจจะมีการ **'กระโดด'** อย่างชัดเจน จากจุดหนึ่งไปยังอีกจุดหนึ่งโดยไม่มีเส้นเชื่อม
+                    </p>
+                    <div class="flex flex-col md:flex-row gap-6">
+                        <!-- Discontinuity: Hole -->
+                        <div class="flex-1 text-center p-4 bg-rose-100 rounded-lg">
+                            <h3 class="font-semibold mb-2 text-rose-800">กราฟมี 'ช่องว่าง' (Hole)</h3>
+                             <svg viewBox="0 0 200 150" class="w-full h-auto">
+                                <line x1="20" y1="130" x2="180" y2="130" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#arrow)" />
+                                <line x1="20" y1="130" x2="20" y2="10" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#arrow)" />
+                                <path d="M 30 110 Q 70 40, 100 80" stroke="#ec4899" stroke-width="3" fill="none" />
+                                <path d="M 100 80 Q 130 120, 170 60" stroke="#ec4899" stroke-width="3" fill="none" stroke-dasharray="5,5"/>
+                                <circle cx="100" cy="80" r="4" fill="white" stroke="#ec4899" stroke-width="2"/>
+                                <text x="90" y="65" font-size="10" fill="#6b7280">อ่านไม่ตอบ</text>
+                            </svg>
+                        </div>
+                        <!-- Discontinuity: Jump -->
+                        <div class="flex-1 text-center p-4 bg-rose-100 rounded-lg">
+                            <h3 class="font-semibold mb-2 text-rose-800">กราฟ 'กระโดด' (Jump)</h3>
+                             <svg viewBox="0 0 200 150" class="w-full h-auto">
+                                <line x1="20" y1="130" x2="180" y2="130" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#arrow)" />
+                                <line x1="20" y1="130" x2="20" y2="10" stroke="#9ca3af" stroke-width="1.5" marker-end="url(#arrow)" />
+                                <path d="M 30 110 C 60 90, 80 90, 100 100" stroke="#ec4899" stroke-width="3" fill="none" />
+                                <path d="M 100 50 C 120 40, 150 40, 170 60" stroke="#ec4899" stroke-width="3" fill="none" />
+                                <circle cx="100" cy="100" r="4" fill="white" stroke="#ec4899" stroke-width="2"/>
+                                <circle cx="100" cy="50" r="4" fill="#ec4899" />
+                                <text x="105" y="75" font-size="10" fill="#6b7280">ทะเลาะกัน</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 3: Continuous Love -->
+        <section class="mb-16 reveal">
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col md:flex-row-reverse items-center">
+                <div class="p-6 md:p-8 md:w-1/2">
+                    <h2 class="text-2xl font-bold text-rose-500 mb-4">ขั้นที่ 3: สู่ความรักที่ "ต่อเนื่อง"</h2>
+                    <p class="text-slate-700 leading-relaxed">
+                       แต่ความรักในอุดมคติ คือความสัมพันธ์ที่ค่อยๆ พัฒนาไปอย่างราบรื่น อาจมีขึ้นมีลงบ้าง แต่สิ่งสำคัญคือ **กราฟไม่เคย 'ขาด' ออกจากกันเลย**
+                       <br><br>
+                       เราสามารถลากเส้นกราฟความสัมพันธ์นี้ไปได้เรื่อยๆ **โดยที่ไม่ต้องยกปากกา** เลยแม้แต่ครั้งเดียว ซึ่งเป็นภาพที่ชัดเจนที่สุดของ **'ฟังก์ชันต่อเนื่อง'**
+                    </p>
+                </div>
+                <div class="p-6 md:p-8 md:w-1/2 bg-rose-100 w-full flex justify-center items-center">
+                    <!-- SVG for Step 3 -->
+                    <svg viewBox="0 0 200 150" class="w-full max-w-xs h-auto">
+                        <line x1="20" y1="130" x2="180" y2="130" stroke="#9ca3af" stroke-width="2" marker-end="url(#arrow)" />
+                        <line x1="20" y1="130" x2="20" y2="10" stroke="#9ca3af" stroke-width="2" marker-end="url(#arrow)" />
+                        <path d="M 30 110 Q 60 120, 80 80 T 130 90 T 170 50" stroke="#10b981" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        <text x="75" y="30" font-size="12" fill="#059669" font-weight="bold">ความสัมพันธ์ที่ราบรื่น</text>
+                    </svg>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 4: The Lesson -->
+        <section class="reveal">
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                <div class="p-6 md:p-8">
+                    <h2 class="text-2xl font-bold text-rose-500 mb-4">ขั้นที่ 4: เข้าสู่บทเรียน</h2>
+                    <p class="text-slate-700 leading-relaxed mb-6">
+                        แล้วในทางคณิตศาสตร์ เราจะรู้ได้อย่างไรว่าฟังก์ชันนั้น 'ต่อเนื่อง' จริงๆ? มันมีเงื่อนไขอะไรบ้างที่จะทำให้ความรัก...เอ้ย! ฟังก์ชันของเราไม่ขาดตอน? 
+                        <br>
+                        คำตอบคือ ฟังก์ชัน f จะต่อเนื่องที่จุด x = c ก็ต่อเมื่อเป็นจริงครบทั้ง 3 เงื่อนไขนี้:
+                    </p>
+                    <div class="space-y-4 bg-rose-100 p-6 rounded-lg text-lg text-slate-800">
+                        <p>1.  \( f(c) \) หาค่าได้ 
+                            <span class="block text-sm text-rose-700 ml-6">(ณ จุดเวลานั้นๆ ความสัมพันธ์ต้องมีสถานะชัดเจน)</span>
+                        </p>
+                        <p>2.  \( \lim_{x \to c} f(x) \) หาค่าได้ 
+                            <span class="block text-sm text-rose-700 ml-6">(ก่อนและหลังช่วงเวลานั้น ความสัมพันธ์มีทิศทางไปในทางเดียวกัน)</span>
+                        </p>
+                        <p>3.  \( \lim_{x \to c} f(x) = f(c) \)
+                            <span class="block text-sm text-rose-700 ml-6">(ทิศทางของความสัมพันธ์ กับสถานะ ณ ปัจจุบัน ต้องเป็นสิ่งเดียวกัน)</span>
+                        </p>
+                    </div>
+                    <p class="mt-6 text-center text-slate-600">ถ้าขาดข้อใดข้อหนึ่งไป ก็เหมือนความรักที่ไม่สมบูรณ์... ฟังก์ชันของเราก็จะ **"ไม่ต่อเนื่อง"** ทันที</p>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <footer class="text-center p-4 text-slate-500 text-sm mt-8">
+        <p>สร้างสรรค์บทเรียนโดยใช้แนวคิดเชิงเปรียบเทียบ</p>
+    </footer>
+
+    <script>
+        // Render LaTeX math
+        document.addEventListener("DOMContentLoaded", function() {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false},
+                    {left: '\\(', right: '\\)', display: false},
+                    {left: '\\[', right: '\\]', display: true}
+                ],
+                throwOnError : false
+            });
+        });
+
+        // Simple scroll animation
+        const revealElements = document.querySelectorAll('.reveal');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, {
+            threshold: 0.1
+        });
+
+        revealElements.forEach(el => {
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
