@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P File Transfer - Direct Send</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        :root {
+            --primary: #007aff;
+            --bg: #f5f5f7;
+            --card: #ffffff;
+        }
+        body {
+            font-family: -apple-system, system-ui, sans-serif;
+            background-color: var(--bg);
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; margin: 0; color: #333;
+        }
+        .card {
+            background: var(--card);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 100%; max-width: 400px; text-align: center;
+        }
+        .id-badge {
+            background: #e8e8ed;
+            padding: 10px;
+            border-radius: 10px;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 15px 0;
+            font-size: 1.2rem;
+            word-break: break-all;
+        }
+        input[type="text"] {
+            width: 100%; padding: 12px; margin: 10px 0;
+            border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;
+        }
+        .btn {
+            background: var(--primary);
+            color: white; border: none;
+            padding: 12px 24px; border-radius: 8px;
+            font-weight: 600; cursor: pointer; width: 100%;
+            transition: 0.3s; margin-top: 10px;
+        }
+        .btn:disabled { background: #ccc; }
+        .file-input-wrapper { margin: 20px 0; }
+        #status { margin-top: 15px; font-size: 0.9rem; color: #666; }
+        .progress-container {
+            height: 8px; width: 100%; background: #eee;
+            border-radius: 4px; margin-top: 10px; display: none;
+        }
+        #progress-bar {
+            height: 100%; width: 0%; background: var(--primary); border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>P2P File Transfer</h2>
+    <p style="font-size: 0.8rem;">ส่งไฟล์ตรงข้ามเครื่อง ไม่ผ่าน Cloud</p>
+    
+    <div id="my-id-section">
+        <span style="font-size: 0.8rem; color: #888;">ID ของเครื่องนี้:</span>
+        <div id="my-id" class="id-badge">กำลังสร้าง ID...</div>
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+    <div id="send-section">
+        <input type="text" id="receiver-id" placeholder="ใส่ ID ของผู้รับ">
+        <div class="file-input-wrapper">
+            <input type="file" id="file-input">
+        </div>
+        <button class="btn" id="send-btn" onclick="sendFile()">ส่งไฟล์</button>
+    </div>
+
+    <div id="status">สถานะ: พร้อมใช้งาน</div>
+    <div class="progress-container" id="progress-cont">
+        <div id="progress-bar"></div>
+    </div>
+</div>
+
+<script>
+    const peer = new Peer();
+    let conn = null;
+
+    // 1. เมื่อเปิดหน้าเว็บ - สร้าง ID ของตัวเอง
+    peer.on('open', (id) => {
+        document.getElementById('my-id').innerText = id;
+    });
+
+    // 2. ฝั่งผู้รับ: รอการเชื่อมต่อและรับไฟล์
+    peer.on('connection', (connection) => {
+        conn = connection;
+        setupConnection();
+    });
+
+    function setupConnection() {
+        conn.on('open', () => {
+            updateStatus("เชื่อมต่อสำเร็จ! กำลังรอรับไฟล์...");
+        });
+
+        conn.on('data', (data) => {
+            // เมื่อได้รับข้อมูล (ที่ส่งมาเป็น Chunk หรือ Blob)
+            if (data.file) {
+                const blob = new Blob([data.file], { type: data.fileType });
+                const url = URL.createObjectURL(blob);
+                
+                // สร้างลิงก์ให้ดาวน์โหลดอัตโนมัติ
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = data.fileName;
+                a.click();
+                
+                updateStatus("ได้รับไฟล์: " + data.fileName + " สำเร็จ!");
+                resetProgress();
+            }
+        });
+    }
+
+    // 3. ฝั่งผู้ส่ง: เริ่มส่งไฟล์
+    async function sendFile() {
+        const targetId = document.getElementById('receiver-id').value;
+        const fileInput = document.getElementById('file-input');
+        const file = fileInput.files[0];
+
+        if (!targetId || !file) {
+            alert("กรุณาใส่ ID ผู้รับและเลือกไฟล์");
+            return;
+        }
+
+        updateStatus("กำลังเชื่อมต่อ...");
+        conn = peer.connect(targetId);
+
+        conn.on('open', () => {
+            updateStatus("กำลังส่ง: " + file.name);
+            showProgress();
+
+            // อ่านไฟล์และส่งข้อมูล
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                conn.send({
+                    file: event.target.result,
+                    fileName: file.name,
+                    fileType: file.type
+                });
+                updateStatus("ส่งไฟล์สำเร็จ!");
+                setProgress(100);
+            };
+            
+            // ใส่ Progress หลอกๆ ให้ดูมีความเคลื่อนไหว (เพราะ FileReader.readAsArrayBuffer ทำงานเร็วในเครื่อง)
+            setProgress(50);
+            reader.readAsArrayBuffer(file);
+        });
+    }
+
+    // ฟังก์ชันช่วยแสดงสถานะ
+    function updateStatus(msg) {
+        document.getElementById('status').innerText = "สถานะ: " + msg;
+    }
+
+    function showProgress() {
+        document.getElementById('progress-cont').style.display = 'block';
+    }
+
+    function setProgress(val) {
+        document.getElementById('progress-bar').style.width = val + "%";
+    }
+
+    function resetProgress() {
+        setTimeout(() => {
+            document.getElementById('progress-cont').style.display = 'none';
+            setProgress(0);
+        }, 2000);
+    }
+</script>
+
+</body>
+</html>
