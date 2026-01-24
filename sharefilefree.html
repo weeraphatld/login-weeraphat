@@ -3,181 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P2P File Transfer - Direct Send</title>
+    <title>P2P Anywhere Transfer</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
-        :root {
-            --primary: #007aff;
-            --bg: #f5f5f7;
-            --card: #ffffff;
-        }
-        body {
-            font-family: -apple-system, system-ui, sans-serif;
-            background-color: var(--bg);
-            display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; margin: 0; color: #333;
-        }
-        .card {
-            background: var(--card);
-            padding: 2rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            width: 100%; max-width: 400px; text-align: center;
-        }
-        .id-badge {
-            background: #e8e8ed;
-            padding: 10px;
-            border-radius: 10px;
-            font-weight: bold;
-            color: var(--primary);
-            margin: 15px 0;
-            font-size: 1.2rem;
-            word-break: break-all;
-        }
-        input[type="text"] {
-            width: 100%; padding: 12px; margin: 10px 0;
-            border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;
-        }
-        .btn {
-            background: var(--primary);
-            color: white; border: none;
-            padding: 12px 24px; border-radius: 8px;
-            font-weight: 600; cursor: pointer; width: 100%;
-            transition: 0.3s; margin-top: 10px;
-        }
-        .btn:disabled { background: #ccc; }
-        .file-input-wrapper { margin: 20px 0; }
-        #status { margin-top: 15px; font-size: 0.9rem; color: #666; }
-        .progress-container {
-            height: 8px; width: 100%; background: #eee;
-            border-radius: 4px; margin-top: 10px; display: none;
-        }
-        #progress-bar {
-            height: 100%; width: 0%; background: var(--primary); border-radius: 4px;
-        }
+        :root { --primary: #5856d6; --success: #34c759; --bg: #f2f2f7; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); display: flex; justify-content: center; padding: 20px; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        .status-box { padding: 10px; border-radius: 10px; margin-bottom: 20px; font-weight: bold; font-size: 14px; }
+        .waiting { background: #fff3cd; color: #856404; }
+        .connected { background: #d4edda; color: #155724; }
+        .btn { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; cursor: pointer; width: 100%; font-size: 16px; font-weight: bold; transition: 0.3s; margin: 5px 0; }
+        .btn-copy { background: #8e8e93; font-size: 13px; padding: 8px; }
+        #link-display { background: #e5e5ea; padding: 10px; border-radius: 8px; font-size: 11px; word-break: break-all; margin: 10px 0; border: 1px dashed #999; }
+        input[type="file"] { margin: 20px 0; width: 100%; }
+        #progress { width: 100%; height: 6px; background: #eee; border-radius: 3px; margin-top: 10px; display: none; }
+        #progress-bar { width: 0%; height: 100%; background: var(--success); border-radius: 3px; transition: 0.3s; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>P2P File Transfer</h2>
-    <p style="font-size: 0.8rem;">ส่งไฟล์ตรงข้ามเครื่อง ไม่ผ่าน Cloud</p>
+    <h2 style="margin-top:0">🚀 P2P Send</h2>
     
-    <div id="my-id-section">
-        <span style="font-size: 0.8rem; color: #888;">ID ของเครื่องนี้:</span>
-        <div id="my-id" class="id-badge">กำลังสร้าง ID...</div>
+    <div id="status" class="status-box waiting">กำลังตั้งค่าระบบ...</div>
+
+    <div id="setup-ui">
+        <p style="font-size: 14px; color: #666;">ส่งลิงก์นี้ให้ iPad (หรือเครื่องปลายทาง):</p>
+        <div id="link-display">สร้างลิงก์สำเร็จ...</div>
+        <button class="btn btn-copy" onclick="copyLink()">คัดลอกลิงก์</button>
     </div>
 
-    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-
-    <div id="send-section">
-        <input type="text" id="receiver-id" placeholder="ใส่ ID ของผู้รับ">
-        <div class="file-input-wrapper">
-            <input type="file" id="file-input">
-        </div>
-        <button class="btn" id="send-btn" onclick="sendFile()">ส่งไฟล์</button>
-    </div>
-
-    <div id="status">สถานะ: พร้อมใช้งาน</div>
-    <div class="progress-container" id="progress-cont">
-        <div id="progress-bar"></div>
+    <div id="transfer-ui" style="display:none;">
+        <input type="file" id="file-input">
+        <button class="btn" onclick="sendFile()">ส่งไฟล์ทันที</button>
+        <div id="progress"><div id="progress-bar"></div></div>
     </div>
 </div>
 
 <script>
-    const peer = new Peer();
+    const statusDiv = document.getElementById('status');
+    const linkDisplay = document.getElementById('link-display');
+    const setupUI = document.getElementById('setup-ui');
+    const transferUI = document.getElementById('transfer-ui');
+    const progressBar = document.getElementById('progress-bar');
+    const progressCont = document.getElementById('progress');
+
+    // --- ส่วนสำคัญ: ตั้งค่า STUN Server ของ Google เพื่อให้ใช้งานข้าม Network ได้ ---
+    const peer = new Peer({
+        config: {
+            'iceServers': [
+                { url: 'stun:stun.l.google.com:19302' },
+                { url: 'stun:stun1.l.google.com:19302' },
+                { url: 'stun:stun2.l.google.com:19302' }
+            ]
+        }
+    });
+
     let conn = null;
 
-    // 1. เมื่อเปิดหน้าเว็บ - สร้าง ID ของตัวเอง
     peer.on('open', (id) => {
-        document.getElementById('my-id').innerText = id;
+        const fullLink = window.location.origin + window.location.pathname + '?join=' + id;
+        linkDisplay.innerText = fullLink;
+        statusDiv.innerText = "สถานะ: รอคนกดลิงก์...";
+        
+        // เช็คว่าเราเป็นคนกดลิงก์มาเองหรือไม่
+        const urlParams = new URLSearchParams(window.location.search);
+        const joinId = urlParams.get('join');
+        if (joinId) {
+            connectTo(joinId);
+        }
     });
 
-    // 2. ฝั่งผู้รับ: รอการเชื่อมต่อและรับไฟล์
-    peer.on('connection', (connection) => {
-        conn = connection;
-        setupConnection();
+    // รอรับการเชื่อมต่อ
+    peer.on('connection', (c) => {
+        conn = c;
+        initConnection();
     });
 
-    function setupConnection() {
+    function connectTo(id) {
+        statusDiv.innerText = "กำลังเชื่อมต่อกับเครื่องต้นทาง...";
+        conn = peer.connect(id, { reliable: true });
+        initConnection();
+    }
+
+    function initConnection() {
         conn.on('open', () => {
-            updateStatus("เชื่อมต่อสำเร็จ! กำลังรอรับไฟล์...");
+            statusDiv.innerText = "เชื่อมต่อสำเร็จ! พร้อมรับ-ส่ง";
+            statusDiv.className = "status-box connected";
+            setupUI.style.display = "none";
+            transferUI.style.display = "block";
         });
 
         conn.on('data', (data) => {
-            // เมื่อได้รับข้อมูล (ที่ส่งมาเป็น Chunk หรือ Blob)
-            if (data.file) {
+            if (data.type === "file") {
+                statusDiv.innerText = "ได้รับไฟล์: " + data.name;
                 const blob = new Blob([data.file], { type: data.fileType });
                 const url = URL.createObjectURL(blob);
-                
-                // สร้างลิงก์ให้ดาวน์โหลดอัตโนมัติ
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = data.fileName;
+                a.download = data.name;
                 a.click();
-                
-                updateStatus("ได้รับไฟล์: " + data.fileName + " สำเร็จ!");
-                resetProgress();
+                alert("ได้รับไฟล์เรียบร้อย!");
             }
         });
-    }
 
-    // 3. ฝั่งผู้ส่ง: เริ่มส่งไฟล์
-    async function sendFile() {
-        const targetId = document.getElementById('receiver-id').value;
-        const fileInput = document.getElementById('file-input');
-        const file = fileInput.files[0];
-
-        if (!targetId || !file) {
-            alert("กรุณาใส่ ID ผู้รับและเลือกไฟล์");
-            return;
-        }
-
-        updateStatus("กำลังเชื่อมต่อ...");
-        conn = peer.connect(targetId);
-
-        conn.on('open', () => {
-            updateStatus("กำลังส่ง: " + file.name);
-            showProgress();
-
-            // อ่านไฟล์และส่งข้อมูล
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                conn.send({
-                    file: event.target.result,
-                    fileName: file.name,
-                    fileType: file.type
-                });
-                updateStatus("ส่งไฟล์สำเร็จ!");
-                setProgress(100);
-            };
-            
-            // ใส่ Progress หลอกๆ ให้ดูมีความเคลื่อนไหว (เพราะ FileReader.readAsArrayBuffer ทำงานเร็วในเครื่อง)
-            setProgress(50);
-            reader.readAsArrayBuffer(file);
+        conn.on('close', () => {
+            statusDiv.innerText = "การเชื่อมต่อหลุด";
+            statusDiv.className = "status-box waiting";
+            location.reload(); // รีโหลดเพื่อเริ่มใหม่
         });
     }
 
-    // ฟังก์ชันช่วยแสดงสถานะ
-    function updateStatus(msg) {
-        document.getElementById('status').innerText = "สถานะ: " + msg;
+    function sendFile() {
+        const fileInput = document.getElementById('file-input');
+        const file = fileInput.files[0];
+        if (!file) return alert("กรุณาเลือกไฟล์");
+
+        progressCont.style.display = "block";
+        progressBar.style.width = "50%"; // หลอกว่ากำลังโหลด
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            conn.send({
+                type: "file",
+                file: e.target.result,
+                name: file.name,
+                fileType: file.type
+            });
+            progressBar.style.width = "100%";
+            setTimeout(() => {
+                alert("ส่งไฟล์สำเร็จ!");
+                progressCont.style.display = "none";
+                progressBar.style.width = "0%";
+            }, 500);
+        };
+        reader.readAsArrayBuffer(file);
     }
 
-    function showProgress() {
-        document.getElementById('progress-cont').style.display = 'block';
-    }
-
-    function setProgress(val) {
-        document.getElementById('progress-bar').style.width = val + "%";
-    }
-
-    function resetProgress() {
-        setTimeout(() => {
-            document.getElementById('progress-cont').style.display = 'none';
-            setProgress(0);
-        }, 2000);
+    function copyLink() {
+        navigator.clipboard.writeText(linkDisplay.innerText);
+        alert("คัดลอกลิงก์แล้ว! ส่งทางแชทให้ iPad ได้เลย");
     }
 </script>
-
 </body>
 </html>
