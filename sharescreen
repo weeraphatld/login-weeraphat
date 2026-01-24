@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Screen Share (iPad to PC)</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #1a1a1a;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        h1 { margin-bottom: 20px; }
+
+        .container {
+            text-align: center;
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            max-width: 90%;
+        }
+
+        input {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #555;
+            background: #444;
+            color: white;
+            font-size: 16px;
+            width: 200px;
+            text-align: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .btn-sender { background-color: #007aff; color: white; } /* สีฟ้าสไตล์ iOS */
+        .btn-receiver { background-color: #34c759; color: white; }
+
+        button:hover { opacity: 0.9; transform: scale(1.05); }
+
+        video {
+            width: 100%;
+            max-width: 800px;
+            margin-top: 20px;
+            border-radius: 8px;
+            background: black;
+            display: none; /* ซ่อนไว้ก่อน */
+        }
+
+        .status { margin-top: 10px; font-size: 0.9em; color: #aaa; }
+        
+        #id-display { font-size: 1.5em; font-weight: bold; color: #ffd700; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="menu">
+        <h1>เลือกโหมดการทำงาน</h1>
+        <button class="btn-receiver" onclick="startReceiver()">ฉันคือ จอรับภาพ (PC/TV)</button>
+        <button class="btn-sender" onclick="showSenderMenu()">ฉันคือ iPad (ตัวส่ง)</button>
+    </div>
+
+    <div class="container" id="receiver-ui" style="display:none;">
+        <h2>รอรับสัญญาณ...</h2>
+        <p>ให้ iPad ใส่รหัสนี้เพื่อเชื่อมต่อ:</p>
+        <div id="id-display">Generating ID...</div>
+        <div class="status" id="status-msg">กำลังรอการเชื่อมต่อ...</div>
+        <video id="remote-video" autoplay playsinline controls></video>
+    </div>
+
+    <div class="container" id="sender-ui" style="display:none;">
+        <h2>ส่งหน้าจอ iPad</h2>
+        <input type="text" id="target-id" placeholder="ใส่รหัสจากหน้าจอ PC">
+        <br>
+        <button class="btn-sender" onclick="startSharing()">เริ่มแชร์หน้าจอ</button>
+        <div class="status" id="sender-status"></div>
+    </div>
+
+    <script>
+        let peer = null;
+
+        // --- Logic สำหรับฝั่งรับภาพ (PC) ---
+        function startReceiver() {
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('receiver-ui').style.display = 'block';
+
+            // สร้าง Peer ID (เปรียบเสมือนเบอร์โทรศัพท์)
+            peer = new Peer(); 
+
+            peer.on('open', (id) => {
+                document.getElementById('id-display').innerText = id;
+            });
+
+            // รอรับสาย (Call)
+            peer.on('call', (call) => {
+                document.getElementById('status-msg').innerText = "กำลังเชื่อมต่อ...";
+                call.answer(); // รับสายโดยไม่ต้องส่ง Stream กลับ
+
+                call.on('stream', (remoteStream) => {
+                    document.getElementById('status-msg').style.display = 'none';
+                    const video = document.getElementById('remote-video');
+                    video.style.display = 'block';
+                    video.srcObject = remoteStream;
+                });
+            });
+        }
+
+        // --- Logic สำหรับฝั่งส่งภาพ (iPad) ---
+        function showSenderMenu() {
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('sender-ui').style.display = 'block';
+            peer = new Peer(); // สร้าง Peer รอไว้
+        }
+
+        async function startSharing() {
+            const targetId = document.getElementById('target-id').value;
+            const statusDiv = document.getElementById('sender-status');
+
+            if (!targetId) {
+                alert("กรุณาใส่รหัสจากหน้าจอ PC ก่อน");
+                return;
+            }
+
+            try {
+                // คำสั่งขอแชร์หน้าจอ (สำคัญมาก!)
+                // บน iPad จะขึ้น Popup ให้กด "Start Broadcast"
+                const stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: { cursor: "always" },
+                    audio: false // ส่วนใหญ่ Browser บนมือถือยังไม่รองรับการส่ง System Audio ผ่านเว็บได้ดีนัก
+                });
+
+                statusDiv.innerText = "กำลังเชื่อมต่อ...";
+                
+                // โทรหาเครื่อง PC และส่งภาพหน้าจอไป
+                const call = peer.call(targetId, stream);
+
+                call.on('close', () => {
+                    statusDiv.innerText = "การแชร์สิ้นสุดลง";
+                });
+
+                // เมื่อกดหยุดแชร์ที่ตัวระบบ iPad
+                stream.getVideoTracks()[0].onended = function () {
+                    call.close();
+                    statusDiv.innerText = "หยุดแชร์แล้ว";
+                };
+
+            } catch (err) {
+                console.error(err);
+                statusDiv.innerText = "เกิดข้อผิดพลาด: " + err.message;
+                alert("ไม่สามารถแชร์หน้าจอได้ (อาจเป็นเพราะ Browser ไม่รองรับ หรือคุณกดยกเลิก)");
+            }
+        }
+    </script>
+</body>
+</html>
