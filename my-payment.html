@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ช่องทางการโอนเงิน - วีรภัทร ลอดทอง</title>
+    <!-- นำเข้าฟอนต์ Prompt จาก Google Fonts เพื่อความสวยงาม -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --scb-color: #4e2a84; /* สีม่วงไทยพาณิชย์ */
+            --ktb-color: #00aeeF; /* สีฟ้ากรุงไทย */
+            --bg-color: #f3f4f6;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Prompt', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #ffffff;
+            max-width: 500px;
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            overflow: hidden;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .profile-img {
+            width: 80px;
+            height: 80px;
+            background-color: #e5e7eb;
+            border-radius: 50%;
+            margin: 0 auto 15px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 32px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            border: 1px solid #f3f4f6;
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card.scb {
+            border-left: 5px solid var(--scb-color);
+            background: linear-gradient(to right, rgba(78, 42, 132, 0.05), transparent);
+        }
+
+        .card.ktb {
+            border-left: 5px solid var(--ktb-color);
+            background: linear-gradient(to right, rgba(0, 174, 239, 0.05), transparent);
+        }
+
+        .bank-name {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .scb .bank-name { color: var(--scb-color); }
+        .ktb .bank-name { color: #0087ba; /* ปรับให้เข้มขึ้นเล็กน้อยเพื่อให้อ่านง่าย */ }
+
+        .account-details {
+            margin-bottom: 15px;
+        }
+
+        .account-details p {
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: var(--text-muted);
+        }
+
+        .acc-number {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text-main);
+            letter-spacing: 1px;
+        }
+
+        .copy-btn {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .scb .copy-btn {
+            background-color: var(--scb-color);
+            color: white;
+        }
+        .scb .copy-btn:hover { background-color: #3b1f66; }
+
+        .ktb .copy-btn {
+            background-color: var(--ktb-color);
+            color: white;
+        }
+        .ktb .copy-btn:hover { background-color: #008ebf; }
+
+        .copy-btn.copied {
+            background-color: #10b981 !important; /* สีเขียวเมื่อก๊อปปี้สำเร็จ */
+            color: white !important;
+        }
+
+        /* Toast Notification */
+        #toast {
+            visibility: hidden;
+            min-width: 200px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 12px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s, bottom 0.3s;
+        }
+
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 50px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="profile-img">
+            💸
+        </div>
+        <h1>ช่องทางการโอนเงิน</h1>
+        <p class="subtitle">กรุณาเลือกบัญชีที่คุณต้องการทำรายการ</p>
+
+        <!-- บัญชี SCB -->
+        <div class="card scb">
+            <div class="bank-name">💜 ธนาคารไทยพาณิชย์ (SCB)</div>
+            <div class="account-details">
+                <p>ชื่อบัญชี: นายวีรภัทร ลอดทอง</p>
+                <div class="acc-number" id="scb-acc">5594010397</div>
+            </div>
+            <button class="copy-btn" id="btn-scb" onclick="copyToClipboard('scb-acc', 'btn-scb')">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                คัดลอกเลขบัญชี
+            </button>
+        </div>
+
+        <!-- บัญชี KTB -->
+        <div class="card ktb">
+            <div class="bank-name">🩵 ธนาคารกรุงไทย (KTB)</div>
+            <div class="account-details">
+                <p>ชื่อบัญชี: นายวีรภัทร ลอดทอง</p>
+                <div class="acc-number" id="ktb-acc">6610414203</div>
+            </div>
+            <button class="copy-btn" id="btn-ktb" onclick="copyToClipboard('ktb-acc', 'btn-ktb')">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                คัดลอกเลขบัญชี
+            </button>
+        </div>
+    </div>
+
+    <!-- แถบแจ้งเตือนเมื่อคัดลอกสำเร็จ -->
+    <div id="toast">คัดลอกเลขบัญชีสำเร็จ!</div>
+
+    <script>
+        function copyToClipboard(elementId, btnId) {
+            // ดึงข้อความเลขบัญชี
+            const textToCopy = document.getElementById(elementId).innerText;
+            
+            // คัดลอกลง Clipboard
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                
+                // เปลี่ยนสถานะปุ่มชั่วคราว
+                const btn = document.getElementById(btnId);
+                const originalHtml = btn.innerHTML;
+                btn.classList.add("copied");
+                btn.innerHTML = `
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+                    คัดลอกแล้ว!
+                `;
+
+                // แสดง Toast แจ้งเตือน
+                const toast = document.getElementById("toast");
+                toast.className = "show";
+
+                // คืนค่าปุ่มและซ่อน Toast หลังผ่านไป 2.5 วินาที
+                setTimeout(function(){ 
+                    btn.classList.remove("copied");
+                    btn.innerHTML = originalHtml;
+                    toast.className = toast.className.replace("show", ""); 
+                }, 2500);
+                
+            }).catch(err => {
+                alert('ไม่สามารถคัดลอกได้ กรุณาคัดลอกด้วยตนเอง');
+            });
+        }
+    </script>
+</body>
+</html>
