@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎂 Happy Birthday GIE! 🎉</title>
+  <meta name="description" content="เว็บอวยพรวันเกิดสุดพิเศษสำหรับจี้ — The Digital Scrapbook of GIE">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Itim&family=Prompt:wght@300;400;500;600&display=swap');
+
+    :root {
+      --cream: #FFF8F0;
+      --pink-light: #FFE4E8;
+      --pink: #FFB5C2;
+      --pink-dark: #FF6B8A;
+      --peach: #FFCBA4;
+      --yellow: #FFF3B0;
+      --yellow-warm: #FFE082;
+      --white: #FFFFFF;
+      --text-dark: #5D4037;
+      --text-medium: #8D6E63;
+      --text-light: #A1887F;
+      --shadow: rgba(255, 107, 138, 0.15);
+      --font-heading: 'Itim', cursive;
+      --font-body: 'Prompt', sans-serif;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--cream);
+      color: var(--text-dark);
+      overflow-x: hidden;
+    }
+
+    /* ===== PRELOADER ===== */
+    #preloader {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: linear-gradient(135deg, var(--pink-light), var(--cream));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.8s, visibility 0.8s;
+    }
+
+    #preloader.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .gift-box-wrapper {
+      position: relative;
+      width: 120px;
+      height: 120px;
+    }
+
+    .gift-box {
+      width: 100px;
+      height: 70px;
+      background: var(--pink-dark);
+      border-radius: 8px;
+      position: absolute;
+      bottom: 0;
+      left: 10px;
+      box-shadow: 0 4px 15px var(--shadow);
+    }
+
+    .gift-box::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 100%;
+      background: var(--yellow-warm);
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .gift-lid {
+      width: 110px;
+      height: 25px;
+      background: var(--pink-dark);
+      border-radius: 6px 6px 0 0;
+      position: absolute;
+      bottom: 70px;
+      left: 5px;
+      filter: brightness(0.9);
+      animation: wiggle 0.6s ease-in-out infinite;
+    }
+
+    .gift-lid::after {
+      content: '';
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background: var(--yellow-warm);
+      border-radius: 50% 50% 0 0;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+    }
+
+    .gift-bow {
+      width: 40px;
+      height: 20px;
+      position: absolute;
+      bottom: 95px;
+      left: 40px;
+    }
+
+    .gift-bow::before,
+    .gift-bow::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 4px solid var(--yellow-warm);
+      background: transparent;
+    }
+
+    .gift-bow::before {
+      left: -5px;
+    }
+
+    .gift-bow::after {
+      right: -5px;
+    }
+
+    @keyframes wiggle {
+
+      0%,
+      100% {
+        transform: rotate(-3deg);
+      }
+
+      50% {
+        transform: rotate(3deg);
+      }
+    }
+
+    .preloader-text {
+      margin-top: 30px;
+      font-family: var(--font-heading);
+      font-size: 1.2rem;
+      color: var(--pink-dark);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 0.6;
+      }
+
+      50% {
+        opacity: 1;
+      }
+    }
+
+    /* ===== HERO SECTION ===== */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, var(--pink-light) 0%, var(--cream) 100%);
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .hero-pattern {
+      position: absolute;
+      inset: 0;
+      opacity: 0.08;
+      background-image:
+        linear-gradient(var(--pink) 1px, transparent 1px),
+        linear-gradient(90deg, var(--pink) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-title {
+      font-family: var(--font-heading);
+      font-size: clamp(2.5rem, 8vw, 5rem);
+      color: var(--pink-dark);
+      text-shadow: 2px 2px 0 var(--peach), 4px 4px 0 rgba(255, 107, 138, 0.15);
+      margin-bottom: 0.5rem;
+    }
+
+    .hero-title .letter {
+      display: inline-block;
+      opacity: 0;
+      animation: bounceIn 0.6s forwards;
+    }
+
+    @keyframes bounceIn {
+      0% {
+        opacity: 0;
+        transform: translateY(-60px) scale(0.5);
+      }
+
+      60% {
+        transform: translateY(10px) scale(1.05);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .hero-subtitle {
+      font-family: var(--font-body);
+      font-weight: 300;
+      font-size: clamp(1rem, 3vw, 1.4rem);
+      color: var(--text-medium);
+      margin-bottom: 2rem;
+    }
+
+    .scroll-hint {
+      margin-top: 2rem;
+      color: var(--pink-dark);
+      font-family: var(--font-heading);
+      font-size: 1.1rem;
+      animation: float 2s ease-in-out infinite;
+      cursor: pointer;
+    }
+
+    .scroll-hint .arrow {
+      display: block;
+      font-size: 1.8rem;
+      margin-top: 0.3rem;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(10px);
+      }
+    }
+
+    /* floating decorations */
+    .floating-deco {
+      position: absolute;
+      font-size: 2rem;
+      animation: floatAround 6s ease-in-out infinite;
+      opacity: 0.5;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .floating-deco:nth-child(1) {
+      top: 10%;
+      left: 8%;
+      animation-delay: 0s;
+    }
+
+    .floating-deco:nth-child(2) {
+      top: 20%;
+      right: 10%;
+      animation-delay: 1s;
+    }
+
+    .floating-deco:nth-child(3) {
+      bottom: 25%;
+      left: 15%;
+      animation-delay: 2s;
+    }
+
+    .floating-deco:nth-child(4) {
+      bottom: 15%;
+      right: 12%;
+      animation-delay: 0.5s;
+    }
+
+    .floating-deco:nth-child(5) {
+      top: 40%;
+      left: 5%;
+      animation-delay: 3s;
+    }
+
+    @keyframes floatAround {
+
+      0%,
+      100% {
+        transform: translateY(0) rotate(0deg);
+      }
+
+      25% {
+        transform: translateY(-15px) rotate(5deg);
+      }
+
+      75% {
+        transform: translateY(10px) rotate(-5deg);
+      }
+    }
+
+    /* ===== GALLERY ===== */
+    #gallery {
+      padding: 4rem 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-title {
+      font-family: var(--font-heading);
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      text-align: center;
+      color: var(--pink-dark);
+      margin-bottom: 0.5rem;
+    }
+
+    .section-subtitle {
+      text-align: center;
+      color: var(--text-light);
+      font-weight: 300;
+      margin-bottom: 3rem;
+      font-size: 1rem;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 2rem;
+    }
+
+    .polaroid {
+      background: var(--white);
+      padding: 12px 12px 14px;
+      border-radius: 4px;
+      box-shadow: 0 4px 20px var(--shadow), 0 1px 4px rgba(0, 0, 0, 0.06);
+      transition: transform 0.4s cubic-bezier(.25, .46, .45, .94), box-shadow 0.4s;
+      cursor: pointer;
+      position: relative;
+      opacity: 0;
+      transform: translateY(40px);
+    }
+
+    .polaroid.visible {
+      opacity: 1;
+      transform: translateY(0) rotate(var(--rot, 0deg));
+    }
+
+    .polaroid:hover {
+      transform: scale(1.05) rotate(0deg) !important;
+      box-shadow: 0 12px 40px rgba(255, 107, 138, 0.25);
+      z-index: 5;
+    }
+
+    .polaroid img {
+      width: 100%;
+      aspect-ratio: 4/5;
+      object-fit: cover;
+      border-radius: 2px;
+      display: block;
+    }
+
+    .polaroid .caption {
+      position: absolute;
+      bottom: 10px;
+      left: 12px;
+      right: 12px;
+      font-family: var(--font-heading);
+      font-size: 0.9rem;
+      color: var(--text-medium);
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tape {
+      position: absolute;
+      width: 60px;
+      height: 20px;
+      background: rgba(255, 243, 176, 0.7);
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%) rotate(-2deg);
+      border-radius: 2px;
+      z-index: 2;
+    }
+
+    /* Lightbox */
+    .lightbox-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.4s;
+      padding: 2rem;
+      cursor: pointer;
+    }
+
+    .lightbox-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .lightbox-content {
+      max-width: 700px;
+      width: 100%;
+      background: var(--white);
+      border-radius: 12px;
+      overflow: hidden;
+      transform: scale(0.8);
+      transition: transform 0.4s;
+      cursor: default;
+    }
+
+    .lightbox-overlay.active .lightbox-content {
+      transform: scale(1);
+    }
+
+    .lightbox-content img {
+      width: 100%;
+      display: block;
+    }
+
+    .lightbox-caption {
+      padding: 1.2rem 1.5rem;
+      font-family: var(--font-heading);
+      font-size: 1.1rem;
+      color: var(--text-dark);
+      text-align: center;
+      background: var(--white);
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 1rem;
+      right: 1.5rem;
+      font-size: 2rem;
+      color: white;
+      cursor: pointer;
+      background: none;
+      border: none;
+      z-index: 1001;
+      transition: transform 0.3s;
+    }
+
+    .lightbox-close:hover {
+      transform: rotate(90deg);
+    }
+
+    /* ===== LETTER ===== */
+    #letter {
+      padding: 8rem 1.5rem 5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: linear-gradient(180deg, var(--cream) 0%, var(--pink-light) 100%);
+    }
+
+    /* scene container — เท่ากับความสูงซอง */
+    .envelope-scene {
+      position: relative;
+      width: 340px;
+      max-width: 92vw;
+      height: 220px;
+      margin-top: 3rem;
+    }
+
+    /* ===== ซอง (อยู่ด้านหน้า) ===== */
+    .envelope-container {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+    }
+
+    .envelope-body {
+      width: 100%;
+      height: 100%;
+      background: var(--peach);
+      border-radius: 0 0 16px 16px;
+      position: relative;
+      box-shadow: 0 8px 30px rgba(255, 203, 164, 0.5);
+    }
+
+    /* เงาพับ V ด้านล่าง */
+    .envelope-body::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      border-left: 170px solid rgba(0, 0, 0, 0.04);
+      border-right: 170px solid rgba(0, 0, 0, 0.04);
+      border-bottom: 90px solid rgba(0, 0, 0, 0.05);
+    }
+
+    /* ฝาซอง */
+    .envelope-flap {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+      border-left: 170px solid transparent;
+      border-right: 170px solid transparent;
+      border-top: 120px solid #e8a070;
+      transform-origin: top center;
+      transition: transform 0.9s cubic-bezier(.45, .05, .55, .95);
+      z-index: 4;
+      filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.1));
+    }
+
+    .envelope-flap.open {
+      transform: rotateX(-180deg);
+    }
+
+    /* ===== กระดาษจดหมาย (อยู่ด้านหลัง → ลอยขึ้นมา) ===== */
+    .letter-paper {
+      position: absolute;
+      bottom: 12px;
+      left: 4%;
+      width: 92%;
+      background: var(--white);
+      border-radius: 10px 10px 8px 8px;
+      padding: 1.8rem 1.5rem 1.5rem;
+      box-shadow: 0 -4px 20px rgba(255, 107, 138, 0.15), 0 8px 30px rgba(0, 0, 0, 0.1);
+      font-family: var(--font-heading);
+      font-size: 0.95rem;
+      line-height: 1.9;
+      color: var(--text-dark);
+      /* ซ่อนอยู่ด้านหลังซอง */
+      z-index: 5;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(0);
+      transition:
+        opacity 0.7s 0.9s ease,
+        transform 1.3s 0.8s cubic-bezier(0.22, 1.1, 0.36, 1);
+      max-height: 420px;
+      overflow-y: auto;
+    }
+
+    .letter-paper.revealed {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(-250px);
+      /* ลอยขึ้นเหนือซอง */
+    }
+
+    .letter-paper .signature {
+      margin-top: 1.5rem;
+      text-align: right;
+      color: var(--pink-dark);
+      font-size: 1.05rem;
+    }
+
+    /* ปุ่ม */
+    .open-letter-btn {
+      margin-top: 2.5rem;
+      padding: 0.85rem 2.2rem;
+      background: var(--pink-dark);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      font-family: var(--font-heading);
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(255, 107, 138, 0.4);
+    }
+
+    .open-letter-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(255, 107, 138, 0.55);
+    }
+
+    .open-letter-btn.hide {
+      display: none;
+    }
+
+    /* ซองจางหายหลังกระดาษโผล่ */
+    .envelope-container.faded {
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      pointer-events: none;
+    }
+
+    /* กระดาษลงมาแทนที่ซอง */
+    .letter-paper.settled {
+      transform: translateY(0) !important;
+      transition: transform 0.8s cubic-bezier(0.34, 1.4, 0.64, 1) !important;
+      overflow-y: auto;
+    }
+
+    /* ===== CAKE / FINALE ===== */
+    #finale {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, var(--pink-light) 0%, #2d1b33 60%);
+      position: relative;
+      padding: 3rem 1.5rem;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .finale-instruction {
+      font-family: var(--font-heading);
+      font-size: clamp(1.1rem, 3vw, 1.4rem);
+      color: var(--cream);
+      margin-bottom: 2rem;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .cake-container {
+      position: relative;
+      width: 220px;
+      height: 280px;
+      margin: 0 auto;
+    }
+
+    /* cake layers */
+    .cake-base {
+      position: absolute;
+      bottom: 0;
+      left: 10px;
+      right: 10px;
+      height: 80px;
+      background: linear-gradient(to bottom, #f8a4b8, #f48fb1);
+      border-radius: 10px 10px 16px 16px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .cake-base::after {
+      content: '';
+      position: absolute;
+      top: -8px;
+      left: -4px;
+      right: -4px;
+      height: 20px;
+      background: var(--white);
+      border-radius: 50% / 100%;
+      opacity: 0.7;
+    }
+
+    .cake-middle {
+      position: absolute;
+      bottom: 72px;
+      left: 25px;
+      right: 25px;
+      height: 65px;
+      background: linear-gradient(to bottom, #ffcdd2, #f8a4b8);
+      border-radius: 8px 8px 0 0;
+    }
+
+    .cake-middle::after {
+      content: '';
+      position: absolute;
+      top: -6px;
+      left: -3px;
+      right: -3px;
+      height: 16px;
+      background: var(--yellow-warm);
+      border-radius: 50% / 100%;
+      opacity: 0.7;
+    }
+
+    .cake-top {
+      position: absolute;
+      bottom: 130px;
+      left: 40px;
+      right: 40px;
+      height: 55px;
+      background: linear-gradient(to bottom, var(--peach), #ffcdd2);
+      border-radius: 8px 8px 0 0;
+    }
+
+    .cake-top::after {
+      content: '';
+      position: absolute;
+      top: -5px;
+      left: -2px;
+      right: -2px;
+      height: 14px;
+      background: var(--white);
+      border-radius: 50% / 100%;
+      opacity: 0.6;
+    }
+
+    /* Candle */
+    .candle {
+      position: absolute;
+      bottom: 180px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 14px;
+      height: 50px;
+      background: linear-gradient(to right, var(--yellow), var(--yellow-warm));
+      border-radius: 3px 3px 0 0;
+    }
+
+    .candle-stripe {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(-45deg, transparent, transparent 4px,
+          rgba(255, 255, 255, 0.3) 4px, rgba(255, 255, 255, 0.3) 8px);
+      border-radius: inherit;
+    }
+
+    .wick {
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      height: 10px;
+      background: #333;
+      border-radius: 1px;
+    }
+
+    .flame {
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 16px;
+      height: 24px;
+      background: radial-gradient(ellipse at bottom, #ffeb3b 0%, #ff9800 50%, transparent 100%);
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      animation: flicker 0.3s ease-in-out infinite alternate;
+      cursor: pointer;
+      transition: opacity 0.5s, transform 0.5s;
+      filter: drop-shadow(0 0 8px rgba(255, 200, 0, 0.8));
+    }
+
+    .flame.blown {
+      opacity: 0 !important;
+      transform: translateX(-50%) scale(0) !important;
+      animation: none !important;
+    }
+
+    @keyframes flicker {
+      0% {
+        transform: translateX(-50%) scale(1) rotate(-2deg);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translateX(-50%) scale(1.08) rotate(2deg);
+        opacity: 0.85;
+      }
+    }
+
+    /* Smoke */
+    .smoke-container {
+      position: absolute;
+      top: -50px;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+
+    .smoke {
+      width: 8px;
+      height: 8px;
+      background: rgba(200, 200, 200, 0.6);
+      border-radius: 50%;
+      position: absolute;
+      opacity: 0;
+    }
+
+    .smoke.active {
+      animation: smokeRise 1.5s ease-out forwards;
+    }
+
+    @keyframes smokeRise {
+      0% {
+        opacity: 0.7;
+        transform: translateY(0) scale(1);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateY(-60px) scale(3) translateX(10px);
+      }
+    }
+
+    /* finale message */
+    .finale-message {
+      margin-top: 2rem;
+      font-family: var(--font-heading);
+      font-size: clamp(1.3rem, 4vw, 2rem);
+      color: var(--yellow-warm);
+      text-shadow: 0 2px 10px rgba(255, 224, 130, 0.5);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.8s 0.5s;
+    }
+
+    .finale-message.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 600px) {
+      .gallery-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+
+      .envelope-scene {
+        width: 290px;
+      }
+
+      .envelope-flap {
+        border-left-width: 145px;
+        border-right-width: 145px;
+        border-top-width: 105px;
+      }
+
+      .envelope-body::after {
+        border-left-width: 145px;
+        border-right-width: 145px;
+      }
+
+      .cake-container {
+        width: 180px;
+        height: 240px;
+      }
+    }
+
+    /* ===== SCROLL REVEAL HELPER ===== */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.8s, transform 0.8s;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ===== MUSIC TOGGLE ===== */
+    .music-toggle {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--pink-dark);
+      color: white;
+      border: none;
+      font-size: 1.4rem;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(255, 107, 138, 0.4);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s;
+    }
+
+    .music-toggle:hover {
+      transform: scale(1.1);
+    }
+
+    .music-toggle.playing {
+      animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+</head>
+
+<body>
+
+  <!-- ===== ZONE 1: PRELOADER ===== -->
+  <div id="preloader">
+    <div class="gift-box-wrapper">
+      <div class="gift-bow"></div>
+      <div class="gift-lid"></div>
+      <div class="gift-box"></div>
+    </div>
+    <p class="preloader-text">กำลังโหลดความน่ารักของจี้... ⏳</p>
+  </div>
+
+  <!-- ===== ZONE 2: HERO ===== -->
+  <section id="hero">
+    <div class="hero-pattern"></div>
+    <span class="floating-deco">🌸</span>
+    <span class="floating-deco">⭐</span>
+    <span class="floating-deco">🎀</span>
+    <span class="floating-deco">💖</span>
+    <span class="floating-deco">🌷</span>
+    <div class="hero-content">
+      <h1 id="heroTitle" class="hero-title">Happy Birthday GIE!</h1>
+      <p class="hero-subtitle">7 May 2026 — วันเกิดของยัยคนน่ารัก 🎂</p>
+      <div class="scroll-hint">
+        เลื่อนลงเพื่อดูความลับ 🤫
+        <span class="arrow">⌄</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ZONE 3: MEMORY GALLERY ===== -->
+  <section id="gallery">
+    <h2 class="section-title reveal">📸 The Memory Gallery</h2>
+    <p class="section-subtitle reveal">รูปภาพของพี่จี้</p>
+    <div class="gallery-grid" id="galleryGrid"></div>
+  </section>
+
+  <!-- ===== LIGHTBOX ===== -->
+  <div class="lightbox-overlay" id="lightbox">
+    <button class="lightbox-close">&times;</button>
+    <div class="lightbox-content">
+      <img src="" alt="Lightbox Image">
+      <div class="lightbox-caption"></div>
+    </div>
+  </div>
+
+  <!-- ===== ZONE 4: SECRET LETTER ===== -->
+  <section id="letter">
+    <h2 class="section-title reveal">💌 The Secret Letter</h2>
+    <p class="section-subtitle reveal">มีอะไรอยากบอก... เปิดอ่านสิ!</p>
+    <div class="envelope-scene reveal">
+      <!-- ซองจดหมาย (z-index 3) -->
+      <div class="envelope-container">
+        <div class="envelope-flap"></div>
+        <div class="envelope-body"></div>
+      </div>
+      <!-- กระดาษจดหมาย (z-index 5, opacity 0 → ลอยขึ้นมาหลังเปิดฝา) -->
+      <div class="letter-paper" id="letterPaper"></div>
+    </div>
+    <button class="open-letter-btn" id="openLetterBtn">คลิกเพื่อเปิดอ่านนะ 💌</button>
+  </section>
+
+  <!-- ===== ZONE 5: GRAND FINALE ===== -->
+  <section id="finale">
+    <p class="finale-instruction reveal">จี้หลับตาอธิษฐาน แล้วกดที่เปลวไฟเพื่อเป่าเทียนสิ! 🕯️</p>
+    <div class="cake-container reveal">
+      <div class="cake-top"></div>
+      <div class="cake-middle"></div>
+      <div class="cake-base"></div>
+      <div class="candle">
+        <div class="candle-stripe"></div>
+        <div class="wick"></div>
+        <div class="flame" id="flame"></div>
+        <div class="smoke-container"></div>
+      </div>
+    </div>
+    <div class="finale-message" id="finaleMsg">
+      ขอให้สมหวังในทุกเรื่องเลยนะมึง เลิฟๆๆ! 💖🎉
+    </div>
+  </section>
+
+  <!-- ===== MUSIC TOGGLE ===== -->
+  <button class="music-toggle" id="musicBtn" aria-label="Toggle Music">🎵</button>
+
+  <!-- SoundCloud Hidden Player -->
+  <iframe id="sc-player" width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay"
+    src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/munaim2007/happy-birthday-to-you-arabic-song&color=%23ff5500&auto_play=false&hide_related=false&show_comments=false&show_user=false&show_reposts=false&show_teaser=false"
+    style="display:none;"></iframe>
+  <script src="https://w.soundcloud.com/player/api.js"></script>
+  <script>
+
+    /* ===== GALLERY DATA ===== */
+    const galleryData = [
+      { src: "https://lh3.googleusercontent.com/d/1lcQLoRJ6NJzRLfGxhlPP3eAjXlnUiTZ_", caption: "" },
+      { src: "https://lh3.googleusercontent.com/d/10QckVgsFDBwoOjK6D0o7naiYy_CBU_dJ", caption: "" },
+      { src: "https://lh3.googleusercontent.com/d/1vfK7Y-VFwZudCyc35rOIUbFKpHKt6i6o", caption: "" },
+      { src: "https://lh3.googleusercontent.com/d/1E1lSn8uOT_Wd2FQW4qf2YgmBhgbDJ1w3", caption: "" },
+      { src: "https://lh3.googleusercontent.com/d/1fN2sdrY6Bvuna2XkLNUqXoRg2VUCOUJE", caption: "" },
+      { src: "https://lh3.googleusercontent.com/d/1_HG8RaU4D-U2qzgpLPDj-SdgfKF1yP72", caption: "" }
+    ];
+
+    /* ===== LETTER DATA (ข้อความอวยพรตัวอย่าง) ===== */
+    const letterText = `ถึงจี้เพื่อนรัก 🌸
+
+สุขสันต์วันเกิดนะจี้! ขอให้มึงมีความสุขมากๆ ไปฝึกสอนก็ขอให้เจอแต่นักเรียนน่ารักๆ เป็นเด็กดีของครูจี้นะ 
+
+ที่สำคัญเลย ขอให้สอบครูผู้ช่วยแล้วได้บรรจุตั้งแต่รอบแรกเลยนะ! มึงเก่งอยู่แล้ว ทำได้แน่นอน สู้ๆ เว้ยยย✌️✨`;
+
+    const letterSignature = "รักและซัพพอร์ตเสมอ 💌";
+
+    /* ===== PRELOADER ===== */
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        const preloader = document.getElementById("preloader");
+        preloader.classList.add("hidden");
+        setTimeout(() => {
+          animateHeroTitle();
+          fireConfetti();
+        }, 400);
+      }, 2000);
+    });
+
+    /* ===== HERO TITLE ANIMATION ===== */
+    function animateHeroTitle() {
+      const title = document.getElementById("heroTitle");
+      const text = title.textContent;
+      title.textContent = "";
+      [...text].forEach((ch, i) => {
+        const span = document.createElement("span");
+        span.className = "letter";
+        span.textContent = ch === " " ? "\u00A0" : ch;
+        span.style.animationDelay = `${i * 0.08}s`;
+        title.appendChild(span);
+      });
+    }
+
+    /* ===== CONFETTI (ใช้ canvas-confetti CDN) ===== */
+    function fireConfetti() {
+      if (typeof confetti !== "function") return;
+      const end = Date.now() + 2500;
+      (function frame() {
+        confetti({
+          particleCount: 3,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 },
+          colors: ["#FFB5C2", "#FFCBA4", "#FFF3B0", "#FF6B8A"]
+        });
+        confetti({
+          particleCount: 3,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 },
+          colors: ["#FFB5C2", "#FFCBA4", "#FFF3B0", "#FF6B8A"]
+        });
+        if (Date.now() < end) requestAnimationFrame(frame);
+      })();
+    }
+
+    /* ===== BUILD GALLERY ===== */
+    function buildGallery() {
+      const grid = document.getElementById("galleryGrid");
+      galleryData.forEach((item, i) => {
+        const rot = (Math.random() - 0.5) * 6; // -3 to 3 deg
+        const card = document.createElement("div");
+        card.className = "polaroid";
+        card.style.setProperty("--rot", `${rot}deg`);
+        card.innerHTML = `
+      <div class="tape"></div>
+      <img src="${item.src}" alt="Memory ${i + 1}" loading="lazy">
+      <div class="caption">${item.caption}</div>
+    `;
+        card.addEventListener("click", () => openLightbox(item.src, item.caption));
+        grid.appendChild(card);
+      });
+    }
+
+    /* ===== LIGHTBOX ===== */
+    function openLightbox(src, caption) {
+      const overlay = document.getElementById("lightbox");
+      overlay.querySelector("img").src = src;
+      overlay.querySelector(".lightbox-caption").textContent = caption;
+      overlay.classList.add("active");
+      document.body.style.overflow = "hidden";
+    }
+    function closeLightbox() {
+      const overlay = document.getElementById("lightbox");
+      overlay.classList.remove("active");
+      document.body.style.overflow = "";
+    }
+
+    /* ===== INTERSECTION OBSERVER (scroll reveal) ===== */
+    function setupScrollReveal() {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("visible");
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.15 }
+      );
+      document.querySelectorAll(".polaroid, .reveal").forEach((el) => observer.observe(el));
+    }
+
+    /* ===== LETTER ===== */
+    function setupLetter() {
+      const paper = document.getElementById("letterPaper");
+      paper.innerHTML = letterText.replace(/\n/g, "<br>") +
+        `<div class="signature">${letterSignature}</div>`;
+
+      const btn = document.getElementById("openLetterBtn");
+      const flap = document.querySelector(".envelope-flap");
+      const envelopeContainer = document.querySelector(".envelope-container");
+
+      btn.addEventListener("click", () => {
+        btn.classList.add("hide");
+
+        // Phase 1: เปิดฝาซอง (0.9s)
+        flap.classList.add("open");
+
+        // Phase 2: กระดาษลอยขึ้น (delay 0.8s, duration 1.3s → จบที่ ~2.1s)
+        paper.classList.add("revealed");
+
+        // Phase 3: ซองจาง (ที่ 2.0s)
+        setTimeout(() => {
+          envelopeContainer.classList.add("faded");
+        }, 2000);
+
+        // Phase 4: กระดาษลงมาแทนที่ซอง (ที่ 2.5s หลังซองจางพอ)
+        setTimeout(() => {
+          paper.classList.add("settled");
+        }, 2500);
+      });
+    }
+
+    /* ===== CAKE / BLOW CANDLE ===== */
+    function setupCake() {
+      const flame = document.getElementById("flame");
+      const msg = document.getElementById("finaleMsg");
+
+      flame.addEventListener("click", blowCandle);
+      flame.addEventListener("touchend", (e) => { e.preventDefault(); blowCandle(); });
+
+      function blowCandle() {
+        if (flame.classList.contains("blown")) return;
+        flame.classList.add("blown");
+
+        // smoke
+        const smokeContainer = document.querySelector(".smoke-container");
+        for (let i = 0; i < 5; i++) {
+          const s = document.createElement("div");
+          s.className = "smoke active";
+          s.style.left = `${(Math.random() - 0.5) * 10}px`;
+          s.style.animationDelay = `${i * 0.15}s`;
+          smokeContainer.appendChild(s);
+        }
+
+        // show message
+        setTimeout(() => {
+          msg.classList.add("show");
+          fireConfetti();
+        }, 800);
+      }
+    }
+
+    /* ===== MUSIC TOGGLE ===== */
+    function setupMusic() {
+      const btn = document.getElementById("musicBtn");
+      const iframe = document.getElementById('sc-player');
+      const widget = SC.Widget(iframe);
+      let playing = false;
+
+      btn.addEventListener("click", () => {
+        if (playing) {
+          widget.pause();
+          btn.classList.remove("playing");
+          btn.textContent = "🎵";
+        } else {
+          widget.play();
+          btn.classList.add("playing");
+          btn.textContent = "🔊";
+        }
+        playing = !playing;
+      });
+    }
+
+    /* ===== INIT ===== */
+    document.addEventListener("DOMContentLoaded", () => {
+      buildGallery();
+      setupLetter();
+      setupCake();
+      setupMusic();
+      setupScrollReveal();
+
+      // lightbox close
+      document.getElementById("lightbox").addEventListener("click", (e) => {
+        if (e.target.closest(".lightbox-content")) return;
+        closeLightbox();
+      });
+      document.querySelector(".lightbox-close").addEventListener("click", closeLightbox);
+
+      // scroll hint
+      document.querySelector(".scroll-hint")?.addEventListener("click", () => {
+        document.getElementById("gallery").scrollIntoView({ behavior: "smooth" });
+      });
+    });
+
+  </script>
+</body>
+
+</html>
