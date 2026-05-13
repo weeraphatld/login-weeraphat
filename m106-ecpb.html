@@ -343,9 +343,9 @@
       <div class="mbox">
         <div class="congrats">🎉🏆🎉</div>
         <h2>ยินดีด้วย!</h2>
-        <div class="room-name" id="roomName">ม.1/2</div>
+        <div class="room-name" id="roomName">ม.1/6</div>
         <p class="msg">เข้าเส้นชัยแล้ว! กดปุ่มด้านล่าง<br>เพื่อเข้ากลุ่ม LINE ห้องเรียนของเรา</p>
-        <a class="line-btn" id="lineLink" href="https://line.me/ti/g/Dxhnmm6fTe" target="_blank">
+        <a class="line-btn" id="lineLink" href="https://line.me/ti/g/4YrxyG62Tm" target="_blank">
           <svg viewBox="0 0 24 24">
             <path
               d="M12 2C6.48 2 2 5.93 2 10.74c0 3.68 2.61 6.86 6.35 8.06.24.06.52.18.6.4.06.2.04.52.02.72l-.1.6c-.04.2-.16.78.68.42s4.54-2.68 6.2-4.58C18.5 14.52 22 12.84 22 10.74 22 5.93 17.52 2 12 2z" />
@@ -373,14 +373,26 @@
     const keys = { l: false, r: false, j: false };
     let running = false, won = false, coins = 0, camX = 0, tiles = [], cl = [], enemies = [], startT = 0;
 
+    // Bird monster image
+    const birdImg = new Image();
+    birdImg.crossOrigin = 'anonymous';
+    birdImg.src = 'https://lh3.googleusercontent.com/d/1zb5jm29jK93Bt7NvAS_K-FFFJj_vxK_6';
+
     // Short level - about 25 tiles wide
     function build() {
       tiles = []; cl = [];
-      const gY = H - T;
+      const gY = H - T * 5;
       // Ground (with small gap at tile 14-15)
       for (let x = 0; x < 28; x++) {
         if (x >= 14 && x <= 15) continue;
         tiles.push({ x: x * T, y: gY, w: T, h: T, t: 'g' });
+      }
+      // Fill ground below (extra rows to fill the gap)
+      for (let r = 1; r <= 4; r++) {
+        for (let x = 0; x < 28; x++) {
+          if (x >= 14 && x <= 15) continue;
+          tiles.push({ x: x * T, y: gY + T * r, w: T, h: T, t: 'g' });
+        }
       }
       // Platforms
       [[3, gY - T * 2.8, 2], [7, gY - T * 2, 2], [10, gY - T * 3.2, 3], [17, gY - T * 2.5, 2], [20, gY - T * 3.5, 3]].forEach(p => {
@@ -402,14 +414,16 @@
         { x: 6 * T, y: gY - T, w: 22 * SC, h: 28 * SC, vx: 1.2 * SC, type: 'pencil', alive: true, squish: 0, left: 4 * T, right: 9 * T },
         { x: 11 * T, y: gY - T * 3.2 - 28 * SC, w: 24 * SC, h: 20 * SC, vx: 0.8 * SC, type: 'eraser', alive: true, squish: 0, left: 10 * T, right: 13 * T },
         { x: 17 * T, y: gY - T, w: 30 * SC, h: 10 * SC, vx: 1.5 * SC, type: 'ruler', alive: true, squish: 0, left: 16 * T, right: 22 * T },
-        { x: 21 * T, y: gY - T * 3.5 - 28 * SC, w: 22 * SC, h: 28 * SC, vx: 1 * SC, type: 'pencil', alive: true, squish: 0, left: 20 * T, right: 23 * T }
+        { x: 21 * T, y: gY - T * 3.5 - 28 * SC, w: 22 * SC, h: 28 * SC, vx: 1 * SC, type: 'pencil', alive: true, squish: 0, left: 20 * T, right: 23 * T },
+        { x: 8 * T, y: gY - T * 4, w: 48 * SC, h: 48 * SC, vx: 1.4 * SC, type: 'bird', alive: true, squish: 0, left: 4 * T, right: 14 * T, baseY: gY - T * 4, flyT: 0 },
+        { x: 18 * T, y: gY - T * 5, w: 44 * SC, h: 44 * SC, vx: -1.1 * SC, type: 'bird', alive: true, squish: 0, left: 16 * T, right: 24 * T, baseY: gY - T * 5, flyT: Math.PI }
       ];
       // Flag at tile 25
       tiles.push({ x: 25 * T, y: gY - T * 5, w: 6, h: T * 5, t: 'f' });
     }
 
     const P = { x: 0, y: 0, w: 24 * SC, h: 30 * SC, vx: 0, vy: 0, og: false, f: 1, fr: 0, ft: 0 };
-    function resetP() { P.x = 1.5 * T; P.y = H - T - P.h; P.vx = 0; P.vy = 0; P.og = false }
+    function resetP() { P.x = 1.5 * T; P.y = H - T * 5 - P.h; P.vx = 0; P.vy = 0; P.og = false }
 
     function rc(a, b) { return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y }
 
@@ -431,6 +445,7 @@
         if (!e.alive) { e.squish = Math.min(e.squish + 0.15, 1); return; }
         e.x += e.vx;
         if (e.x <= e.left || e.x + e.w >= e.right) e.vx *= -1;
+        if (e.type === 'bird') { e.flyT += 0.04; e.y = e.baseY + Math.sin(e.flyT) * 18 * SC; }
         if (rc(P, e)) {
           if (P.vy > 0 && P.y + P.h - e.y < 12 * SC) { e.alive = false; P.vy = JF * 0.7; coins++; document.getElementById('sd').textContent = '⭐ ' + coins; }
           else { P.vx = P.x < e.x ? -6 * SC : 6 * SC; P.x += P.vx; P.vy = -5 * SC; }
@@ -455,7 +470,7 @@
       cx.fillStyle = '#66bb6a';
       [[0, 160], [300, 120], [600, 150]].forEach(h => {
         const x = h[0] * SC - camX * 0.4;
-        cx.beginPath(); cx.moveTo(x, H - T); cx.quadraticCurveTo(x + h[1] * SC * 0.5, H - T - h[1] * SC * 0.5, x + h[1] * SC, H - T); cx.fill();
+        cx.beginPath(); cx.moveTo(x, H - T * 5); cx.quadraticCurveTo(x + h[1] * SC * 0.5, H - T * 5 - h[1] * SC * 0.5, x + h[1] * SC, H - T * 5); cx.fill();
       });
     }
 
@@ -566,6 +581,55 @@
         cx.fillStyle = '#000'; cx.fillRect(8 * s, 3 * s, 3 * s, 3 * s); cx.fillRect(18 * s, 3 * s, 3 * s, 3 * s);
         // Grin
         cx.fillStyle = '#d32f2f'; cx.fillRect(11 * s, 6 * s, 8 * s, 2 * s);
+      } else if (e.type === 'bird') {
+        const wingT = Date.now() / 120;
+        const wf = Math.sin(wingT) * 18 * s;
+        const wf2 = Math.sin(wingT + 0.5) * 12 * s;
+        const bw = e.w, bh = e.h;
+        const cx2 = bw / 2, cy2 = bh / 2;
+        // Left wing
+        cx.fillStyle = '#c62828'; cx.beginPath();
+        cx.moveTo(cx2 - bw * 0.15, cy2 - bh * 0.05);
+        cx.quadraticCurveTo(-bw * 0.3, cy2 - bh * 0.5 + wf, -bw * 0.45, cy2 - bh * 0.15 + wf);
+        cx.quadraticCurveTo(-bw * 0.2, cy2 + bh * 0.15 + wf2, cx2 - bw * 0.1, cy2 + bh * 0.1);
+        cx.closePath(); cx.fill();
+        cx.fillStyle = '#e53935'; cx.beginPath();
+        cx.moveTo(cx2 - bw * 0.1, cy2);
+        cx.quadraticCurveTo(-bw * 0.15, cy2 - bh * 0.35 + wf, -bw * 0.3, cy2 - bh * 0.05 + wf);
+        cx.quadraticCurveTo(-bw * 0.1, cy2 + bh * 0.1 + wf2, cx2 - bw * 0.05, cy2 + bh * 0.08);
+        cx.closePath(); cx.fill();
+        cx.fillStyle = '#ef5350'; cx.beginPath();
+        cx.moveTo(cx2 - bw * 0.05, cy2 + bh * 0.02);
+        cx.quadraticCurveTo(-bw * 0.05, cy2 - bh * 0.2 + wf, -bw * 0.15, cy2 + bh * 0.05 + wf);
+        cx.quadraticCurveTo(0, cy2 + bh * 0.1 + wf2, cx2 - bw * 0.02, cy2 + bh * 0.06);
+        cx.closePath(); cx.fill();
+        // Right wing
+        cx.fillStyle = '#c62828'; cx.beginPath();
+        cx.moveTo(cx2 + bw * 0.15, cy2 - bh * 0.05);
+        cx.quadraticCurveTo(bw + bw * 0.3, cy2 - bh * 0.5 + wf, bw + bw * 0.45, cy2 - bh * 0.15 + wf);
+        cx.quadraticCurveTo(bw + bw * 0.2, cy2 + bh * 0.15 + wf2, cx2 + bw * 0.1, cy2 + bh * 0.1);
+        cx.closePath(); cx.fill();
+        cx.fillStyle = '#e53935'; cx.beginPath();
+        cx.moveTo(cx2 + bw * 0.1, cy2);
+        cx.quadraticCurveTo(bw + bw * 0.15, cy2 - bh * 0.35 + wf, bw + bw * 0.3, cy2 - bh * 0.05 + wf);
+        cx.quadraticCurveTo(bw + bw * 0.1, cy2 + bh * 0.1 + wf2, cx2 + bw * 0.05, cy2 + bh * 0.08);
+        cx.closePath(); cx.fill();
+        cx.fillStyle = '#ef5350'; cx.beginPath();
+        cx.moveTo(cx2 + bw * 0.05, cy2 + bh * 0.02);
+        cx.quadraticCurveTo(bw + bw * 0.05, cy2 - bh * 0.2 + wf, bw + bw * 0.15, cy2 + bh * 0.05 + wf);
+        cx.quadraticCurveTo(bw, cy2 + bh * 0.1 + wf2, cx2 + bw * 0.02, cy2 + bh * 0.06);
+        cx.closePath(); cx.fill();
+        // Bird body image (on top)
+        if (birdImg.complete && birdImg.naturalWidth > 0) {
+          if (e.vx < 0) { cx.save(); cx.translate(bw, 0); cx.scale(-1, 1); cx.drawImage(birdImg, 0, 0, bw, bh); cx.restore(); }
+          else { cx.drawImage(birdImg, 0, 0, bw, bh); }
+        } else {
+          cx.fillStyle = '#e53935'; cx.beginPath(); cx.arc(cx2, cy2, bw * 0.35, 0, Math.PI * 2); cx.fill();
+          cx.fillStyle = '#fff'; cx.beginPath(); cx.arc(cx2 - 4 * s, cy2 - 4 * s, 4 * s, 0, Math.PI * 2); cx.fill();
+          cx.beginPath(); cx.arc(cx2 + 4 * s, cy2 - 4 * s, 4 * s, 0, Math.PI * 2); cx.fill();
+          cx.fillStyle = '#000'; cx.beginPath(); cx.arc(cx2 - 3 * s, cy2 - 3 * s, 2 * s, 0, Math.PI * 2); cx.fill();
+          cx.beginPath(); cx.arc(cx2 + 5 * s, cy2 - 3 * s, 2 * s, 0, Math.PI * 2); cx.fill();
+        }
       }
       cx.restore();
     }
