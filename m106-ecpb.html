@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>🏫 Welcome New Students!</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: 'Kanit', sans-serif
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700;900&family=Press+Start+2P&display=swap');
+
+    #gc {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      overflow: hidden
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%
+    }
+
+    #hud {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      right: 8px;
+      display: flex;
+      justify-content: space-between;
+      color: #fff;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+      text-shadow: 2px 2px #000
+    }
+
+    #hud div {
+      background: rgba(0, 0, 0, 0.5);
+      padding: 5px 10px;
+      border-radius: 8px
+    }
+
+    #controls {
+      position: absolute;
+      bottom: 18px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 12px;
+      pointer-events: none
+    }
+
+    .cg {
+      display: flex;
+      gap: 8px;
+      pointer-events: auto
+    }
+
+    .cb {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      border: 3px solid rgba(255, 255, 255, 0.5);
+      background: rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      color: #fff;
+      backdrop-filter: blur(4px);
+      touch-action: none
+    }
+
+    .cb:active {
+      background: rgba(255, 255, 255, 0.35);
+      transform: scale(0.9)
+    }
+
+    #jb {
+      width: 72px;
+      height: 72px;
+      font-size: 13px;
+      font-family: 'Press Start 2P', monospace;
+      background: rgba(30, 136, 229, 0.4);
+      border-color: rgba(30, 136, 229, 0.8)
+    }
+
+    #jb:active {
+      background: rgba(30, 136, 229, 0.7)
+    }
+
+    /* Start Screen */
+    #ss {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, #1e88e5 0%, #42a5f5 40%, #66bb6a 60%, #43a047 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      text-align: center
+    }
+
+    #ss h1 {
+      font-family: 'Kanit', sans-serif;
+      color: #fff;
+      font-size: 28px;
+      font-weight: 900;
+      text-shadow: 3px 3px 0 #1565c0;
+      margin-bottom: 4px;
+      line-height: 1.4
+    }
+
+    #ss h2 {
+      font-family: 'Kanit', sans-serif;
+      color: #fff59d;
+      font-size: 18px;
+      font-weight: 600;
+      text-shadow: 2px 2px #000
+    }
+
+    #ss .sub {
+      color: #e3f2fd;
+      font-size: 13px;
+      margin-top: 8px;
+      font-weight: 300
+    }
+
+    #ss .sb {
+      margin-top: 28px;
+      padding: 14px 36px;
+      background: linear-gradient(135deg, #ff7043, #f4511e);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      font-family: 'Kanit', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(244, 81, 30, 0.4);
+      animation: pulse 1.5s infinite
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        transform: scale(1)
+      }
+
+      50% {
+        transform: scale(1.06)
+      }
+    }
+
+    #ss .emoji-row {
+      font-size: 40px;
+      margin: 15px 0
+    }
+
+    /* Modal */
+    #modal {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.88);
+      z-index: 30;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center
+    }
+
+    #modal.show {
+      display: flex
+    }
+
+    .mbox {
+      background: linear-gradient(135deg, #1a237e, #283593);
+      border: 4px solid #ffd740;
+      border-radius: 20px;
+      padding: 28px 22px;
+      text-align: center;
+      max-width: 340px;
+      width: 92%;
+      box-shadow: 0 0 60px rgba(255, 215, 64, 0.3);
+      animation: popUp .5s ease
+    }
+
+    @keyframes popUp {
+      from {
+        transform: scale(0.4) translateY(40px);
+        opacity: 0
+      }
+
+      to {
+        transform: scale(1) translateY(0);
+        opacity: 1
+      }
+    }
+
+    .mbox h2 {
+      font-family: 'Kanit', sans-serif;
+      color: #ffd740;
+      font-size: 22px;
+      font-weight: 900;
+      margin-bottom: 4px
+    }
+
+    .mbox .congrats {
+      font-size: 42px;
+      margin: 10px 0
+    }
+
+    .mbox .room-name {
+      background: linear-gradient(135deg, #ffd740, #ffb300);
+      color: #1a237e;
+      font-family: 'Kanit', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      padding: 10px 20px;
+      border-radius: 12px;
+      margin: 12px 0;
+      display: inline-block
+    }
+
+    .mbox .msg {
+      color: #e8eaf6;
+      font-size: 14px;
+      margin: 10px 0;
+      font-weight: 300;
+      line-height: 1.5
+    }
+
+    .mbox .line-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+      padding: 14px 32px;
+      background: #06c755;
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      font-family: 'Kanit', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(6, 199, 85, 0.4);
+      text-decoration: none;
+      transition: transform .2s
+    }
+
+    .mbox .line-btn:active {
+      transform: scale(0.95)
+    }
+
+    .mbox .line-btn svg {
+      width: 24px;
+      height: 24px;
+      fill: #fff
+    }
+
+    .mbox .replay {
+      margin-top: 12px;
+      padding: 8px 20px;
+      background: transparent;
+      color: #90caf9;
+      border: 2px solid #90caf9;
+      border-radius: 50px;
+      font-family: 'Kanit', sans-serif;
+      font-size: 13px;
+      cursor: pointer
+    }
+
+    .fw {
+      position: absolute;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      animation: fwa 1s ease-out forwards;
+      pointer-events: none
+    }
+
+    @keyframes fwa {
+      0% {
+        opacity: 1;
+        transform: scale(1)
+      }
+
+      100% {
+        opacity: 0;
+        transform: scale(0) translateY(-60px)
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="gc">
+    <canvas id="cv"></canvas>
+    <div id="hud">
+      <div id="sd">⭐ 0</div>
+      <div id="td">🏃 GO!</div>
+    </div>
+    <div id="controls">
+      <div class="cg">
+        <div class="cb" id="lb">◀</div>
+        <div class="cb" id="rb">▶</div>
+      </div>
+      <div class="cg">
+        <div class="cb" id="jb">A</div>
+      </div>
+    </div>
+    <div id="ss">
+      <div class="emoji-row">🏫📚✨</div>
+      <h1>สวัสดีครับ<br>นักเรียนชั้น ม.1</h1>
+      <h2>กิจกรรมแรกพบ</h2>
+      <p class="sub">วิ่งไปให้ถึงเส้นชัย เพื่อเข้ากลุ่มห้องเรียน!</p>
+      <button class="sb" id="startBtn">🎮 เริ่มเลย!</button>
+    </div>
+    <div id="modal">
+      <div class="mbox">
+        <div class="congrats">🎉🏆🎉</div>
+        <h2>ยินดีด้วย!</h2>
+        <div class="room-name" id="roomName">ม.1/2</div>
+        <p class="msg">เข้าเส้นชัยแล้ว! กดปุ่มด้านล่าง<br>เพื่อเข้ากลุ่ม LINE ห้องเรียนของเรา</p>
+        <a class="line-btn" id="lineLink" href="https://line.me/ti/g/Dxhnmm6fTe" target="_blank">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M12 2C6.48 2 2 5.93 2 10.74c0 3.68 2.61 6.86 6.35 8.06.24.06.52.18.6.4.06.2.04.52.02.72l-.1.6c-.04.2-.16.78.68.42s4.54-2.68 6.2-4.58C18.5 14.52 22 12.84 22 10.74 22 5.93 17.52 2 12 2z" />
+          </svg>
+          เข้ากลุ่ม LINE
+        </a>
+
+      </div>
+    </div>
+  </div>
+  <script>
+    // ===== CONFIG =====
+    const ROOM_NAME = "ม.1/6";
+    const LINE_URL = "https://line.me/ti/g/4YrxyG62Tm"; // ← ใส่ลิงก์กลุ่ม LINE ตรงนี้
+
+    document.getElementById('roomName').textContent = ROOM_NAME;
+    document.getElementById('lineLink').href = LINE_URL;
+
+    const cv = document.getElementById('cv'), cx = cv.getContext('2d'), gc = document.getElementById('gc');
+    let W, H, SC, T = 36;
+    function resize() { W = gc.clientWidth; H = gc.clientHeight; cv.width = W; cv.height = H; SC = W / 420; T = Math.round(36 * SC) }
+    resize(); window.addEventListener('resize', resize);
+
+    const G = 0.55 * SC, JF = -11 * SC, MS = 3.5 * SC;
+    const keys = { l: false, r: false, j: false };
+    let running = false, won = false, coins = 0, camX = 0, tiles = [], cl = [], enemies = [], startT = 0;
+
+    // Short level - about 25 tiles wide
+    function build() {
+      tiles = []; cl = [];
+      const gY = H - T;
+      // Ground (with small gap at tile 14-15)
+      for (let x = 0; x < 28; x++) {
+        if (x >= 14 && x <= 15) continue;
+        tiles.push({ x: x * T, y: gY, w: T, h: T, t: 'g' });
+      }
+      // Platforms
+      [[3, gY - T * 2.8, 2], [7, gY - T * 2, 2], [10, gY - T * 3.2, 3], [17, gY - T * 2.5, 2], [20, gY - T * 3.5, 3]].forEach(p => {
+        for (let i = 0; i < p[2]; i++)tiles.push({ x: (p[0] + i) * T, y: p[1], w: T, h: T, t: i % 2 ? 'q' : 'b' });
+      });
+      // Pipes
+      [[5, 2], [13, 2], [19, 2]].forEach(p => {
+        for (let r = 0; r < p[1]; r++) {
+          tiles.push({ x: p[0] * T, y: gY - ((r + 1) * T), w: T, h: T, t: r === p[1] - 1 ? 'pt' : 'p' });
+          tiles.push({ x: (p[0] + 1) * T, y: gY - ((r + 1) * T), w: T, h: T, t: r === p[1] - 1 ? 'pt' : 'p' });
+        }
+      });
+      // Coins
+      [[4, gY - T * 1.8], [8, gY - T * 3.2], [11, gY - T * 4.5], [18, gY - T * 3.8], [21, gY - T * 5], [24, gY - T * 1.5]].forEach(c => {
+        cl.push({ x: c[0] * T, y: c[1], w: 20 * SC, h: 20 * SC, got: false, a: 0 });
+      });
+      // Enemies: pencil, eraser, ruler
+      enemies = [
+        { x: 6 * T, y: gY - T, w: 22 * SC, h: 28 * SC, vx: 1.2 * SC, type: 'pencil', alive: true, squish: 0, left: 4 * T, right: 9 * T },
+        { x: 11 * T, y: gY - T * 3.2 - 28 * SC, w: 24 * SC, h: 20 * SC, vx: 0.8 * SC, type: 'eraser', alive: true, squish: 0, left: 10 * T, right: 13 * T },
+        { x: 17 * T, y: gY - T, w: 30 * SC, h: 10 * SC, vx: 1.5 * SC, type: 'ruler', alive: true, squish: 0, left: 16 * T, right: 22 * T },
+        { x: 21 * T, y: gY - T * 3.5 - 28 * SC, w: 22 * SC, h: 28 * SC, vx: 1 * SC, type: 'pencil', alive: true, squish: 0, left: 20 * T, right: 23 * T }
+      ];
+      // Flag at tile 25
+      tiles.push({ x: 25 * T, y: gY - T * 5, w: 6, h: T * 5, t: 'f' });
+    }
+
+    const P = { x: 0, y: 0, w: 24 * SC, h: 30 * SC, vx: 0, vy: 0, og: false, f: 1, fr: 0, ft: 0 };
+    function resetP() { P.x = 1.5 * T; P.y = H - T - P.h; P.vx = 0; P.vy = 0; P.og = false }
+
+    function rc(a, b) { return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y }
+
+    function update() {
+      if (!running || won) return;
+      P.vx = 0;
+      if (keys.l) { P.vx = -MS; P.f = -1 }
+      if (keys.r) { P.vx = MS; P.f = 1 }
+      P.vy += G; if (P.vy > 14 * SC) P.vy = 14 * SC;
+      if (keys.j && P.og) { P.vy = JF; P.og = false; keys.j = false }
+      P.x += P.vx; if (P.x < 0) P.x = 0;
+      for (const t of tiles) { if (t.t === 'f') continue; if (rc(P, t)) { if (P.vx > 0) P.x = t.x - P.w; else if (P.vx < 0) P.x = t.x + t.w } }
+      P.y += P.vy; P.og = false;
+      for (const t of tiles) { if (t.t === 'f') continue; if (rc(P, t)) { if (P.vy > 0) { P.y = t.y - P.h; P.vy = 0; P.og = true } else if (P.vy < 0) { P.y = t.y + t.h; P.vy = 0 } } }
+      if (P.y > H + 60) resetP();
+      cl.forEach(c => { if (!c.got && rc(P, c)) { c.got = true; coins++; document.getElementById('sd').textContent = '⭐ ' + coins } });
+      // Enemy update
+      enemies.forEach(e => {
+        if (!e.alive) { e.squish = Math.min(e.squish + 0.15, 1); return; }
+        e.x += e.vx;
+        if (e.x <= e.left || e.x + e.w >= e.right) e.vx *= -1;
+        if (rc(P, e)) {
+          if (P.vy > 0 && P.y + P.h - e.y < 12 * SC) { e.alive = false; P.vy = JF * 0.7; coins++; document.getElementById('sd').textContent = '⭐ ' + coins; }
+          else { P.vx = P.x < e.x ? -6 * SC : 6 * SC; P.x += P.vx; P.vy = -5 * SC; }
+        }
+      });
+      if (P.x + P.w >= 25 * T && !won) { won = true; showModal() }
+      let tc = P.x - W * 0.35; if (tc < 0) tc = 0; camX += (tc - camX) * 0.12;
+    }
+
+    function drawBg() {
+      // School-themed sky
+      const g = cx.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, '#1e88e5'); g.addColorStop(0.5, '#42a5f5'); g.addColorStop(1, '#81d4fa');
+      cx.fillStyle = g; cx.fillRect(0, 0, W, H);
+      // Clouds
+      cx.fillStyle = 'rgba(255,255,255,0.85)';
+      [[80, 50], [260, 35], [440, 60], [700, 40]].forEach(c => {
+        const x = c[0] * SC - camX * 0.25;
+        if (x > -80 && x < W + 80) { cx.beginPath(); cx.arc(x, c[1] * SC, 18 * SC, 0, Math.PI * 2); cx.arc(x + 16 * SC, c[1] * SC - 6 * SC, 16 * SC, 0, Math.PI * 2); cx.arc(x + 32 * SC, c[1] * SC, 20 * SC, 0, Math.PI * 2); cx.fill() }
+      });
+      // Hills
+      cx.fillStyle = '#66bb6a';
+      [[0, 160], [300, 120], [600, 150]].forEach(h => {
+        const x = h[0] * SC - camX * 0.4;
+        cx.beginPath(); cx.moveTo(x, H - T); cx.quadraticCurveTo(x + h[1] * SC * 0.5, H - T - h[1] * SC * 0.5, x + h[1] * SC, H - T); cx.fill();
+      });
+    }
+
+    function drawTile(t) {
+      const sx = t.x - camX, sy = t.y;
+      if (sx < -T || sx > W + T) return;
+      if (t.t === 'g') {
+        cx.fillStyle = '#43a047'; cx.fillRect(sx, sy, T, 5 * SC);
+        cx.fillStyle = '#8d6e63'; cx.fillRect(sx, sy + 5 * SC, T, T - 5 * SC);
+        cx.strokeStyle = '#6d4c41'; cx.lineWidth = 1; cx.strokeRect(sx + 2, sy + 8 * SC, T / 2 - 3, T / 2 - 4);
+      } else if (t.t === 'b') {
+        cx.fillStyle = '#ef6c00'; cx.fillRect(sx, sy, T, T);
+        cx.strokeStyle = '#ff9800'; cx.lineWidth = 1; cx.strokeRect(sx + 1, sy + 1, T - 2, T / 2 - 2);
+        cx.fillStyle = '#000'; cx.globalAlpha = 0.2; cx.fillRect(sx, sy + T / 2 - 1, T, 2); cx.fillRect(sx + T / 2, sy, 2, T); cx.globalAlpha = 1;
+      } else if (t.t === 'q') {
+        cx.fillStyle = '#fdd835'; cx.fillRect(sx, sy, T, T);
+        cx.strokeStyle = '#f9a825'; cx.lineWidth = 2; cx.strokeRect(sx + 1, sy + 1, T - 2, T - 2);
+        cx.fillStyle = '#e65100'; cx.font = `bold ${14 * SC}px monospace`; cx.textAlign = 'center'; cx.fillText('?', sx + T / 2, sy + T / 2 + 5 * SC);
+      } else if (t.t === 'p' || t.t === 'pt') {
+        cx.fillStyle = '#43a047'; cx.fillRect(sx, sy, T, T);
+        cx.fillStyle = '#2e7d32'; cx.fillRect(sx, sy, 4 * SC, T);
+        cx.fillStyle = '#66bb6a'; cx.fillRect(sx + 6 * SC, sy, 3 * SC, T);
+        if (t.t === 'pt') { cx.fillStyle = '#43a047'; cx.fillRect(sx - 3 * SC, sy, T + 6 * SC, 8 * SC); cx.strokeStyle = '#2e7d32'; cx.lineWidth = 1; cx.strokeRect(sx - 3 * SC, sy, T + 6 * SC, 8 * SC) }
+      } else if (t.t === 'f') {
+        cx.fillStyle = '#78909c'; cx.fillRect(sx, sy, 6 * SC, T * 5);
+        cx.fillStyle = '#e53935'; cx.beginPath(); cx.moveTo(sx + 6 * SC, sy); cx.lineTo(sx + 28 * SC, sy + 12 * SC); cx.lineTo(sx + 6 * SC, sy + 24 * SC); cx.fill();
+        // "GOAL" text
+        cx.fillStyle = '#fff'; cx.font = `bold ${8 * SC}px Kanit`; cx.textAlign = 'center'; cx.fillText('🏁', sx + 16 * SC, sy + 14 * SC);
+      }
+    }
+
+    function drawCoin(c) {
+      if (c.got) return;
+      const sx = c.x - camX, sy = c.y; if (sx < -30 || sx > W + 30) return;
+      c.a += 0.07; const s = Math.abs(Math.cos(c.a));
+      cx.save(); cx.translate(sx + 10 * SC, sy + 10 * SC); cx.scale(s, 1);
+      cx.fillStyle = '#ffd600'; cx.beginPath(); cx.arc(0, 0, 9 * SC, 0, Math.PI * 2); cx.fill();
+      cx.fillStyle = '#fff9c4'; cx.beginPath(); cx.arc(-2 * SC, -2 * SC, 4 * SC, 0, Math.PI * 2); cx.fill();
+      cx.restore();
+    }
+
+    function drawPlayer() {
+      const sx = P.x - camX, sy = P.y, s = SC;
+      // Hat
+      cx.fillStyle = '#1e88e5'; cx.fillRect(sx + 2 * s, sy - 2 * s, 20 * s, 7 * s); cx.fillRect(sx + (P.f === 1 ? 14 : 2) * s, sy - 2 * s, 10 * s, 5 * s);
+      // Head
+      cx.fillStyle = '#ffcc80'; cx.fillRect(sx + 5 * s, sy, 14 * s, 12 * s);
+      // Eyes
+      cx.fillStyle = '#000'; cx.fillRect(sx + (P.f === 1 ? 14 : 6) * s, sy + 5 * s, 2.5 * s, 2.5 * s);
+      // Body (school uniform - white shirt)
+      cx.fillStyle = '#fff'; cx.fillRect(sx + 3 * s, sy + 12 * s, 18 * s, 10 * s);
+      cx.fillStyle = '#1e88e5'; cx.fillRect(sx + 10 * s, sy + 12 * s, 4 * s, 10 * s); // tie
+      // Pants
+      cx.fillStyle = '#37474f'; cx.fillRect(sx + 5 * s, sy + 22 * s, 14 * s, 8 * s);
+      // Legs animation
+      if (!P.og) {
+        cx.fillRect(sx + 3 * s, sy + 28 * s, 7 * s, 4 * s); cx.fillRect(sx + 14 * s, sy + 24 * s, 7 * s, 4 * s);
+      } else if (keys.l || keys.r) {
+        P.ft++; if (P.ft > 5) { P.fr = (P.fr + 1) % 2; P.ft = 0 }
+        cx.fillStyle = '#37474f';
+        if (P.fr === 0) { cx.fillRect(sx + 3 * s, sy + 28 * s, 7 * s, 3 * s); cx.fillRect(sx + 14 * s, sy + 28 * s, 7 * s, 3 * s) }
+        else { cx.fillRect(sx + 1 * s, sy + 28 * s, 7 * s, 3 * s); cx.fillRect(sx + 16 * s, sy + 28 * s, 7 * s, 3 * s) }
+      }
+      // Shoes
+      cx.fillStyle = '#5d4037';
+      cx.fillRect(sx + 3 * s, sy + 29 * s, 8 * s, 3 * s); cx.fillRect(sx + 13 * s, sy + 29 * s, 8 * s, 3 * s);
+    }
+
+    function drawEnemy(e) {
+      const sx = e.x - camX, sy = e.y, s = SC;
+      if (sx < -50 || sx > W + 50) return;
+      const sq = e.alive ? 1 : Math.max(0, 1 - e.squish);
+      cx.save();
+      cx.translate(sx + e.w / 2, sy + e.h);
+      cx.scale(e.alive ? 1 : 1.3, sq);
+      cx.translate(-e.w / 2, -e.h);
+      cx.globalAlpha = e.alive ? 1 : Math.max(0, 1 - e.squish);
+      if (e.type === 'pencil') {
+        // Pencil body
+        cx.fillStyle = '#fdd835'; cx.fillRect(2 * s, 4 * s, 16 * s, 20 * s);
+        cx.fillStyle = '#f9a825'; cx.fillRect(2 * s, 4 * s, 4 * s, 20 * s);
+        // Tip
+        cx.fillStyle = '#ffcc80'; cx.beginPath(); cx.moveTo(2 * s, 24 * s); cx.lineTo(10 * s, 30 * s); cx.lineTo(18 * s, 24 * s); cx.fill();
+        cx.fillStyle = '#37474f'; cx.beginPath(); cx.moveTo(7 * s, 27 * s); cx.lineTo(10 * s, 30 * s); cx.lineTo(13 * s, 27 * s); cx.fill();
+        // Eraser top
+        cx.fillStyle = '#e91e63'; cx.fillRect(2 * s, 0, 16 * s, 6 * s);
+        // Eyes
+        cx.fillStyle = '#fff'; cx.fillRect(5 * s, 10 * s, 5 * s, 5 * s); cx.fillRect(12 * s, 10 * s, 5 * s, 5 * s);
+        cx.fillStyle = '#000'; cx.fillRect(6 * s, 11 * s, 3 * s, 3 * s); cx.fillRect(13 * s, 11 * s, 3 * s, 3 * s);
+        // Angry mouth
+        cx.fillStyle = '#d32f2f'; cx.fillRect(6 * s, 17 * s, 9 * s, 3 * s);
+      } else if (e.type === 'eraser') {
+        // Eraser body
+        cx.fillStyle = '#f8bbd0'; cx.fillRect(0, 0, 24 * s, 18 * s); cx.fillStyle = '#f48fb1'; cx.fillRect(0, 0, 24 * s, 4 * s);
+        cx.fillStyle = '#e91e63'; cx.fillRect(0, 14 * s, 24 * s, 4 * s);
+        // Band
+        cx.fillStyle = '#1565c0'; cx.fillRect(0, 6 * s, 24 * s, 3 * s);
+        // Eyes
+        cx.fillStyle = '#fff'; cx.fillRect(4 * s, 8 * s, 5 * s, 5 * s); cx.fillRect(15 * s, 8 * s, 5 * s, 5 * s);
+        cx.fillStyle = '#000'; cx.fillRect(5 * s, 9 * s, 3 * s, 3 * s); cx.fillRect(16 * s, 9 * s, 3 * s, 3 * s);
+      } else if (e.type === 'ruler') {
+        // Ruler body
+        cx.fillStyle = '#90caf9'; cx.fillRect(0, 0, 30 * s, 10 * s);
+        cx.strokeStyle = '#1565c0'; cx.lineWidth = 1;
+        for (let i = 0; i < 6; i++) { cx.beginPath(); cx.moveTo(i * 6 * s, 0); cx.lineTo(i * 6 * s, 4 * s); cx.stroke(); }
+        cx.strokeRect(0, 0, 30 * s, 10 * s);
+        // Eyes
+        cx.fillStyle = '#000'; cx.fillRect(8 * s, 3 * s, 3 * s, 3 * s); cx.fillRect(18 * s, 3 * s, 3 * s, 3 * s);
+        // Grin
+        cx.fillStyle = '#d32f2f'; cx.fillRect(11 * s, 6 * s, 8 * s, 2 * s);
+      }
+      cx.restore();
+    }
+
+    function render() {
+      cx.clearRect(0, 0, W, H); drawBg(); tiles.forEach(drawTile); cl.forEach(drawCoin); enemies.forEach(drawEnemy); drawPlayer();
+    }
+
+    function loop() { update(); render(); if (running) requestAnimationFrame(loop) }
+
+    function showModal() {
+      running = false;
+      setTimeout(() => {
+        document.getElementById('modal').classList.add('show');
+        // Fireworks
+        const m = document.getElementById('modal');
+        const cols = ['#e53935', '#ffd740', '#43a047', '#1e88e5', '#ff4081', '#fff'];
+        for (let i = 0; i < 35; i++) {
+          setTimeout(() => {
+            const f = document.createElement('div'); f.className = 'fw';
+            f.style.left = Math.random() * 100 + '%'; f.style.top = Math.random() * 100 + '%';
+            f.style.background = cols[~~(Math.random() * cols.length)];
+            f.style.width = f.style.height = (3 + Math.random() * 5) + 'px';
+            f.style.animationDuration = (0.5 + Math.random()) + 's';
+            m.appendChild(f); setTimeout(() => f.remove(), 1500);
+          }, i * 70);
+        }
+      }, 400);
+    }
+
+    function startGame() {
+      document.getElementById('ss').style.display = 'none';
+      document.getElementById('modal').classList.remove('show');
+      build(); coins = 0; camX = 0; won = false;
+      document.getElementById('sd').textContent = '⭐ 0';
+      resetP(); startT = Date.now(); running = true; loop();
+    }
+
+    // Touch controls
+    function addT(id, k) {
+      const e = document.getElementById(id);
+      e.addEventListener('touchstart', ev => { ev.preventDefault(); keys[k] = true }, { passive: false });
+      e.addEventListener('touchend', ev => { ev.preventDefault(); keys[k] = false }, { passive: false });
+      e.addEventListener('mousedown', () => keys[k] = true);
+      e.addEventListener('mouseup', () => keys[k] = false);
+    }
+    addT('lb', 'l'); addT('rb', 'r'); addT('jb', 'j');
+
+    // Keyboard
+    document.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') keys.l = true; if (e.key === 'ArrowRight') keys.r = true; if (e.key === ' ' || e.key === 'ArrowUp') keys.j = true });
+    document.addEventListener('keyup', e => { if (e.key === 'ArrowLeft') keys.l = false; if (e.key === 'ArrowRight') keys.r = false });
+
+    document.getElementById('startBtn').onclick = startGame;
+    document.getElementById('rpBtn').onclick = startGame;
+  </script>
+</body>
+
+</html>
