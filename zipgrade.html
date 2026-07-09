@@ -475,7 +475,7 @@ header strong { color: var(--accent2); }
     <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
     <!-- Custom JS -->
     <script>
-  /* ====================================================
+/* ====================================================
    OMR Scanner — app.js
    ==================================================== */
 
@@ -488,19 +488,19 @@ const CHOICES       = ['ก', 'ข', 'ค', 'ง'];
 // Bubble layout in the warped 600×800 image
 // Two columns: Q1-15 on the left, Q16-30 on the right
 const BUBBLE_LAYOUT = {
-  dw: 600, dh: 800,
+  dw: 600, dh: 848, // A4 aspect ratio (1:1.414)
   cols: [
-    // { x: left-edge of bubble column, choices: [x0,x1,x2,x3], rows: [y0…y14] }
+    // Adjusted for corners being placed on the 4 black square markers
     {
-      choices: [74, 107, 140, 173],
-      rows: [105,136,167,198,229,260,291,322,353,384,415,446,477,508,539]
+      choices: [65, 103, 141, 179],
+      rows: [210, 248, 286, 324, 362, 400, 438, 476, 514, 552, 590, 628, 666, 704, 742]
     },
     {
-      choices: [404, 437, 470, 503],
-      rows: [105,136,167,198,229,260,291,322,353,384,415,446,477,508,539]
+      choices: [385, 423, 461, 499],
+      rows: [210, 248, 286, 324, 362, 400, 438, 476, 514, 552, 590, 628, 666, 704, 742]
     }
   ],
-  bubbleR: 14   // radius in pixels on the 600×800 canvas
+  bubbleR: 15
 };
 
 // ─── App State ───────────────────────────────────────────────────────────────
@@ -950,7 +950,7 @@ function confirmAdjust() {
     cv.adaptiveThreshold(blurred, thresh, 255,
       cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 11, 2);
 
-    const DW = 600, DH = 800;
+    const DW = BUBBLE_LAYOUT.dw, DH = BUBBLE_LAYOUT.dh;
     const srcPts = cv.matFromArray(4, 1, cv.CV_32FC2, [
       pts[0].x, pts[0].y,
       pts[1].x, pts[1].y,
@@ -1084,6 +1084,7 @@ function showResults(results) {
     det.appendChild(row);
   });
 }
+
 
 </script>
 </body>
