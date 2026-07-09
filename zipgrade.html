@@ -474,7 +474,8 @@ header strong { color: var(--accent2); }
     <!-- OpenCV.js -->
     <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
     <!-- Custom JS -->
-    <script>/* ====================================================
+    <script>
+  /* ====================================================
    OMR Scanner — app.js
    ==================================================== */
 
@@ -491,11 +492,11 @@ const BUBBLE_LAYOUT = {
   cols: [
     // { x: left-edge of bubble column, choices: [x0,x1,x2,x3], rows: [y0…y14] }
     {
-      choices: [74, 140, 206, 272],
+      choices: [74, 107, 140, 173],
       rows: [105,136,167,198,229,260,291,322,353,384,415,446,477,508,539]
     },
     {
-      choices: [338, 404, 470, 536],
+      choices: [404, 437, 470, 503],
       rows: [105,136,167,198,229,260,291,322,353,384,415,446,477,508,539]
     }
   ],
@@ -781,11 +782,12 @@ function getCanvasPos(e) {
 }
 
 function getScreenPos(e) {
-  // Returns position in viewport coordinates (for positioning the magnifier)
+  // Returns position relative to adjust-container (for positioning the magnifier)
+  const rect = document.getElementById('adjust-container').getBoundingClientRect();
   if (e.touches && e.touches.length > 0) {
-    return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
   }
-  return { x: e.clientX, y: e.clientY };
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
 }
 
 function nearestHandle(cx, cy) {
@@ -861,7 +863,7 @@ function showMagnifier(e, cornerPt) {
   const screenPos = getScreenPos(e);
 
   // Position magnifier ABOVE the finger (offset upward)
-  const MAG_OFFSET_Y = -110;
+  const MAG_OFFSET_Y = -130;
   magnifier.style.left = `${screenPos.x}px`;
   magnifier.style.top  = `${screenPos.y + MAG_OFFSET_Y}px`;
   magnifier.style.display = 'block';
@@ -1082,6 +1084,7 @@ function showResults(results) {
     det.appendChild(row);
   });
 }
+
 </script>
 </body>
 </html>
