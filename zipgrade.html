@@ -3,514 +3,1085 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ระบบตรวจข้อสอบ OMR (Ultimate Grid)</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>OMR Scanner (ตรวจข้อสอบอัตโนมัติ)</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; overscroll-behavior-y: contain; }
-        .view-section { display: none; }
-        .view-section.active { display: block; animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        #camera-container { position: relative; width: 100%; height: 75vh; background: #000; overflow: hidden; border-radius: 0.5rem; }
-        #video-feed { width: 100%; height: 100%; object-fit: cover; }
-        .guide-box {
-            position: absolute; top: 15%; left: 10%; right: 10%; bottom: 15%;
-            border: 2px dashed rgba(255, 255, 255, 0.5); pointer-events: none;
-        }
+/* ====================================================
+   OMR Scanner — style.css
+   ==================================================== */
 
-        /* ระบบจุดจับลาก (Draggable Handles) */
-        #adjust-container { position: relative; width: 100%; touch-action: none; overflow: hidden; background: #ddd; }
-        #adjust-canvas { width: 100%; display: block; }
-        .handle {
-            position: absolute; width: 48px; height: 48px; 
-            background-color: rgba(239, 68, 68, 0.6); border: 3px solid #ef4444;
-            border-radius: 50%; transform: translate(-50%, -50%); cursor: grab; z-index: 20;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;
-        }
-        .handle::after { content: ''; width: 10px; height: 10px; background: white; border-radius: 50%; }
-        .handle:active { cursor: grabbing; background-color: rgba(220, 38, 38, 0.9); transform: translate(-50%, -50%) scale(1.1); }
-        
-        /* ป้ายกำกับบอกมุม */
-        .handle-label {
-            position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.7); color: white; padding: 2px 8px; border-radius: 4px;
-            font-size: 12px; white-space: nowrap; pointer-events: none;
-        }
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap');
 
-        .radio-custom input[type="radio"] { display: none; }
-        .radio-custom label {
-            display: inline-block; width: 36px; height: 36px; line-height: 36px;
-            text-align: center; border-radius: 50%; border: 2px solid #cbd5e1;
-            color: #64748b; font-weight: bold; cursor: pointer; transition: all 0.2s;
-        }
-        .radio-custom input[type="radio"]:checked + label { background-color: #3b82f6; border-color: #3b82f6; color: white; }
+/* ── Reset & Variables ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #0f1117;
+  --surface:   #1a1d27;
+  --surface2:  #22263a;
+  --border:    #2e3348;
+  --accent:    #6c63ff;
+  --accent2:   #00d4aa;
+  --danger:    #ff5c6e;
+  --text:      #e8eaf0;
+  --muted:     #7a7f99;
+  --radius:    16px;
+  --radius-sm: 10px;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Prompt', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* ── App Container ── */
+#app-container {
+  position: relative;
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* ── Screens ── */
+.screen {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  opacity: 0;
+  transition: opacity .3s ease;
+}
+.screen.active {
+  display: flex;
+  opacity: 1;
+}
+
+/* ── Loading Screen ── */
+#loading-screen {
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background: var(--bg);
+}
+#loading-screen h2 { font-size: 1.2rem; font-weight: 600; }
+#loading-screen p  { color: var(--muted); font-size: .85rem; }
+
+.loader {
+  width: 52px; height: 52px;
+  border: 4px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Headers ── */
+header {
+  padding: 20px 20px 12px;
+  text-align: center;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+header h1 { font-size: 1.15rem; font-weight: 700; margin-bottom: 4px; }
+header p  { font-size: .78rem; color: var(--muted); line-height: 1.5; }
+header strong { color: var(--accent2); }
+
+/* overlay header for scanner */
+.overlay-header {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 10;
+  background: linear-gradient(to bottom, rgba(0,0,0,.65) 0%, transparent 100%);
+  border-bottom: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  padding: 16px 16px 24px;
+}
+.overlay-header h1 { font-size: 1rem; font-weight: 600; }
+
+/* ── Buttons ── */
+.primary-btn, .secondary-btn, .icon-btn, .capture-btn {
+  cursor: pointer;
+  font-family: 'Prompt', sans-serif;
+  border: none;
+  outline: none;
+  transition: transform .15s, opacity .15s;
+}
+.primary-btn:active, .secondary-btn:active { transform: scale(.97); }
+
+.primary-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: linear-gradient(135deg, var(--accent), #8b83ff);
+  color: #fff;
+  font-size: .9rem; font-weight: 600;
+  padding: 14px 24px;
+  border-radius: var(--radius);
+  width: 100%;
+  box-shadow: 0 4px 20px rgba(108,99,255,.35);
+}
+
+.secondary-btn {
+  background: var(--surface2);
+  color: var(--muted);
+  font-size: .85rem; font-weight: 400;
+  padding: 12px 24px;
+  border-radius: var(--radius);
+  width: 100%;
+  border: 1px solid var(--border);
+}
+
+.icon-btn {
+  width: 40px; height: 40px;
+  background: rgba(255,255,255,.1);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  backdrop-filter: blur(6px);
+}
+.icon-btn:active { transform: scale(.9); }
+
+.action-buttons {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 16px 20px 24px;
+  flex-shrink: 0;
+}
+
+/* ── Setup Screen ── */
+#setup-screen {
+  background: var(--bg);
+}
+#keys-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.key-row {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+}
+.key-label {
+  font-size: .8rem; font-weight: 600;
+  color: var(--muted); min-width: 36px;
+}
+.key-choices { display: flex; gap: 8px; flex: 1; }
+.choice-btn {
+  flex: 1;
+  padding: 8px 4px;
+  border-radius: 8px;
+  border: 2px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-family: 'Prompt', sans-serif;
+  font-size: .82rem; font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+}
+.choice-btn:active { transform: scale(.94); }
+.choice-btn.selected {
+  border-color: var(--accent);
+  background: rgba(108,99,255,.18);
+  color: var(--text);
+}
+#setup-screen .action-buttons { background: var(--surface); border-top: 1px solid var(--border); }
+
+/* ── Scanner Screen ── */
+#scanner-screen { background: #000; }
+.camera-container {
+  position: relative;
+  flex: 1;
+  background: #000;
+  overflow: hidden;
+}
+#videoElement {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+#overlayCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+}
+.scanner-controls {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 16px 20px 32px;
+  background: linear-gradient(to top, rgba(0,0,0,.7) 0%, transparent 100%);
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+}
+.scan-instruction {
+  color: rgba(255,255,255,.85);
+  font-size: .82rem;
+  background: rgba(0,0,0,.45);
+  padding: 6px 16px;
+  border-radius: 20px;
+  text-align: center;
+}
+.capture-btn {
+  width: 70px; height: 70px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.15);
+  border: 4px solid #fff;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(8px);
+}
+.capture-btn:active { transform: scale(.93); background: rgba(255,255,255,.25); }
+.inner-circle {
+  width: 52px; height: 52px;
+  background: #fff;
+  border-radius: 50%;
+}
+
+/* ── Adjust Screen ── */
+#adjust-screen {
+  background: var(--bg);
+}
+.adjust-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #000;
+  touch-action: none;
+}
+#adjustCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  touch-action: none;
+}
+
+/* ── Floating Magnifier (new drag UX) ── */
+#corner-magnifier {
+  position: absolute;
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 3px solid var(--accent);
+  box-shadow: 0 4px 24px rgba(0,0,0,.6), 0 0 0 2px rgba(108,99,255,.4);
+  pointer-events: none;
+  display: none;
+  overflow: hidden;
+  z-index: 50;
+  transform: translate(-50%, -50%);
+  transition: opacity .1s;
+}
+#corner-magnifier canvas {
+  width: 100%; height: 100%;
+  display: block;
+}
+/* crosshair inside magnifier */
+#corner-magnifier::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(#6c63ff 1px, transparent 1px) 50% 0/1px 100%,
+    linear-gradient(to right, #6c63ff 1px, transparent 1px) 0 50%/100% 1px;
+  opacity: .6;
+}
+
+/* adjust-panel: info bar */
+.adjust-panel {
+  padding: 12px 20px 4px;
+  text-align: center;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  font-size: .75rem; color: var(--muted);
+  flex-shrink: 0;
+}
+.adjust-panel strong { color: var(--accent2); }
+
+/* ── Result Screen ── */
+#result-screen { background: var(--bg); }
+.score-card {
+  margin: 20px;
+  background: linear-gradient(135deg, var(--accent), #8b83ff);
+  border-radius: var(--radius);
+  padding: 28px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(108,99,255,.35);
+}
+.score-card h2 { font-size: 3rem; font-weight: 700; }
+.score-card p  { font-size: .85rem; opacity: .8; margin-top: 4px; }
+
+.result-image-container {
+  padding: 0 20px 8px;
+}
+#resultCanvas {
+  width: 100%;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.result-details {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 20px 12px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.result-row {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+}
+.result-row.correct { border-color: var(--accent2); background: rgba(0,212,170,.07); }
+.result-row.wrong   { border-color: var(--danger);  background: rgba(255,92,110,.07); }
+.result-row.no-ans  { border-color: var(--muted);   background: rgba(122,127,153,.07); }
+.result-num { font-size: .78rem; font-weight: 700; color: var(--muted); min-width: 32px; }
+.result-badge {
+  font-size: .78rem; font-weight: 700;
+  padding: 3px 9px; border-radius: 6px;
+}
+.correct .result-badge { background: rgba(0,212,170,.2); color: var(--accent2); }
+.wrong   .result-badge { background: rgba(255,92,110,.2); color: var(--danger); }
+.no-ans  .result-badge { background: rgba(122,127,153,.2); color: var(--muted); }
+.result-detail { font-size: .78rem; color: var(--muted); flex: 1; text-align: right; }
+
+#result-screen .action-buttons { background: var(--surface); border-top: 1px solid var(--border); }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
     </style>
 </head>
-<body class="text-gray-800 h-screen flex flex-col">
+<body>
+    <div id="app-container">
+        <!-- 1. หน้าจอโหลด (Loading Screen) สำหรับรอ OpenCV.js -->
+        <div id="loading-screen" class="screen active">
+            <div class="loader"></div>
+            <h2>กำลังเตรียมระบบ...</h2>
+            <p>กรุณารอสักครู่ ระบบกำลังโหลด AI ประมวลผลภาพ</p>
+        </div>
 
-    <header class="bg-blue-800 text-white p-4 shadow-md flex justify-between items-center z-10 relative">
-        <h1 class="text-xl font-bold"><i class="fa-solid fa-crosshairs mr-2"></i> EasyGrade Ultimate</h1>
-        <button id="btn-home" class="text-white hover:text-blue-200 text-2xl"><i class="fa-solid fa-house"></i></button>
-    </header>
-
-    <main class="flex-1 overflow-y-auto p-4 relative w-full max-w-md mx-auto">
-        
-        <!-- View 1: หน้าหลัก -->
-        <section id="view-home" class="view-section active">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-lg font-bold text-gray-700">ชุดเฉลย</h2>
-                <button onclick="app.createNewKey()" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700">
-                    <i class="fa-solid fa-plus mr-1"></i> สร้างเฉลย
-                </button>
-            </div>
-            <div id="keys-list" class="space-y-3"></div>
-            <div id="no-keys-msg" class="text-center text-gray-500 mt-10 hidden">
-                <i class="fa-solid fa-file-circle-plus text-5xl mb-4 opacity-50"></i>
-                <p>ยังไม่มีชุดเฉลย<br>คลิก "สร้างเฉลย" เพื่อเริ่มต้นใช้งาน</p>
-            </div>
-        </section>
-
-        <!-- View 2: จัดการเฉลย -->
-        <section id="view-edit" class="view-section">
-            <h2 class="text-lg font-bold text-gray-700 mb-4" id="edit-title">ตั้งค่าเฉลย (30 ข้อ)</h2>
-            <input type="text" id="key-name" placeholder="ชื่อชุดข้อสอบ" class="w-full p-3 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500 outline-none shadow-sm">
-            <div class="bg-white rounded-lg shadow-sm border p-4 mb-20"><div id="answer-grid" class="space-y-4"></div></div>
-            <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t flex gap-2 max-w-md mx-auto shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-20">
-                <button onclick="app.showHome()" class="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg font-bold">ยกเลิก</button>
-                <button onclick="app.saveKey()" class="flex-1 bg-green-500 text-white py-3 rounded-lg font-bold shadow-md">บันทึกเฉลย</button>
-            </div>
-        </section>
-
-        <!-- View 3: สแกนกล้อง -->
-        <section id="view-scan" class="view-section">
-            <div class="bg-blue-100 text-blue-800 p-3 text-sm mb-3 rounded-lg shadow-sm text-center">
-                ให้กลุ่มคำตอบอยู่ในกรอบ แล้วกดถ่ายภาพ
+        <!-- 2. หน้าจอตั้งค่าเฉลย (Key Setup) -->
+        <div id="setup-screen" class="screen">
+            <header>
+                <h1>ตั้งค่าเฉลย</h1>
+                <p>เลือกคำตอบที่ถูกต้องสำหรับแต่ละข้อ</p>
+            </header>
+            
+            <div id="keys-container">
+                <!-- Javascript will inject 30 questions here -->
             </div>
             
-            <div id="camera-container" class="shadow-lg">
-                <video id="video-feed" autoplay playsinline></video>
-                <div class="guide-box"></div>
-            </div>
-
-            <div class="mt-6 flex justify-center">
-                <button id="btn-capture" class="w-20 h-20 bg-blue-600 rounded-full border-4 border-white shadow-[0_0_0_4px_rgba(37,99,235,0.5)] flex items-center justify-center text-white text-3xl hover:bg-blue-600 active:scale-95 transition">
-                    <i class="fa-solid fa-camera"></i>
+            <div class="action-buttons">
+                <button id="btn-start-scan" class="primary-btn">
+                    <span>เริ่มสแกนกระดาษคำตอบ</span>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
                 </button>
             </div>
-            <canvas id="process-canvas" class="hidden"></canvas>
-        </section>
+        </div>
 
-        <!-- View 4: ปรับตาข่ายและดูผลลัพธ์ -->
-        <section id="view-result" class="view-section">
-            <div id="instruction-bar" class="bg-red-100 border-l-4 border-red-500 text-red-800 p-3 text-sm mb-3 rounded shadow-sm">
-                <b>สำคัญมาก:</b> ลากเป้าสีแดง 4 มุม ไปทับตรงกลาง <b>วงกลมข้อแรกและข้อสุดท้าย</b> ของแต่ละฝั่ง (ตามป้ายบอก) ตาข่ายจะกางทับทุกข้อพอดีเป๊ะ!
+        <!-- 3. หน้าจอสแกน (Scanner) -->
+        <div id="scanner-screen" class="screen">
+            <header class="overlay-header">
+                <button id="btn-back-setup" class="icon-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+                </button>
+                <h1>สแกนข้อสอบ</h1>
+            </header>
+            
+            <div class="camera-container">
+                <video id="videoElement" autoplay playsinline></video>
+                <canvas id="overlayCanvas"></canvas>
             </div>
+            
+            <div class="scanner-controls">
+                <p class="scan-instruction" id="scan-status">ถ่ายให้เห็นกระดาษทั้งแผ่นชัดเจน</p>
+                <button id="btn-capture" class="capture-btn">
+                    <div class="inner-circle"></div>
+                </button>
+            </div>
+            
+            <!-- Hidden canvas for processing -->
+            <canvas id="processingCanvas" style="display:none;"></canvas>
+        </div>
 
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-4 border border-gray-200">
-                <!-- แถบคะแนน (ซ่อนไว้ตอนกำลังปรับกรอบ) -->
-                <div id="score-header" class="bg-green-500 text-white text-center py-4 relative hidden">
-                    <h2 class="text-sm font-bold opacity-90">คะแนนที่ได้</h2>
-                    <div class="text-6xl font-black drop-shadow-md" id="score-display">0/30</div>
-                </div>
-                
-                <div class="relative bg-gray-200">
-                    <div id="adjust-container" class="shadow">
-                        <canvas id="adjust-canvas"></canvas>
-                        <!-- เป้าลาก 4 มุม -->
-                        <div id="h-tl" class="handle" data-id="tl"><div class="handle-label">ข้อ 1 ก.</div></div>
-                        <div id="h-tr" class="handle" data-id="tr"><div class="handle-label">ข้อ 16 ง.</div></div>
-                        <div id="h-bl" class="handle" data-id="bl"><div class="handle-label">ข้อ 15 ก.</div></div>
-                        <div id="h-br" class="handle" data-id="br"><div class="handle-label">ข้อ 30 ง.</div></div>
-                    </div>
+        <!-- 3.5 หน้าจอปรับแก้พิกัด (Adjust Screen) -->
+        <div id="adjust-screen" class="screen">
+            <header>
+                <h1>ปรับตำแหน่งกระดาษ</h1>
+                <p>แตะใกล้จุดสีม่วง แล้วลาก — <strong>แว่นขยายจะขึ้นเหนือนิ้ว</strong> ให้เห็นชัดไม่มีนิ้วบัง</p>
+            </header>
+            
+            <div class="adjust-container" id="adjust-container">
+                <canvas id="adjustCanvas"></canvas>
+
+                <!-- ── Floating magnifier (NEW drag UX) ──
+                     เมื่อลากมุม วงกลมแว่นขยายจะลอยขึ้นเหนือนิ้ว 110px
+                     แสดงภาพขยาย 2.5x พร้อม crosshair บอกตำแหน่งแน่นอน -->
+                <div id="corner-magnifier">
+                    <canvas id="magCanvas"></canvas>
                 </div>
             </div>
             
-            <div class="flex gap-2 mb-4" id="action-buttons">
-                <!-- ปุ่มตอนกำลังปรับกรอบ -->
-                <button id="btn-do-grade" onclick="app.finishCalibration()" class="w-full bg-blue-600 text-white py-4 rounded-lg font-bold shadow-md text-lg">
-                    <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> กรอบตรงแล้ว ตรวจเลย!
-                </button>
-                
-                <!-- ปุ่มตอนตรวจเสร็จ (ซ่อนไว้ก่อน) -->
-                <button id="btn-back-home" onclick="app.showHome()" class="flex-1 bg-green-500 text-white py-3 rounded-lg font-bold shadow-md hidden">
-                    <i class="fa-solid fa-check mr-2"></i> เสร็จสิ้น
-                </button>
-                <button id="btn-scan-next" onclick="app.startScan(app.currentScanKeyId)" class="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg font-bold shadow-sm hidden">
-                    <i class="fa-solid fa-camera mr-2"></i> สแกนแผ่นใหม่
-                </button>
+            <div class="action-buttons">
+                <button id="btn-confirm-adjust" class="primary-btn">ยืนยันและตรวจข้อสอบ</button>
+                <button id="btn-cancel-adjust" class="secondary-btn">ถ่ายใหม่</button>
             </div>
-        </section>
+        </div>
 
-    </main>
-
-    <script>
-        const app = {
-            keys: JSON.parse(localStorage.getItem('omr_keys_ultimate')) || [],
-            currentScanKeyId: null,
-            editingKeyId: null,
-            videoStream: null,
+        <!-- 4. หน้าจอผลลัพธ์ (Result) -->
+        <div id="result-screen" class="screen">
+            <header>
+                <h1>ผลการตรวจ</h1>
+            </header>
             
-            // ข้อมูลภาพและจุด 4 มุม (TL, TR, BL, BR)
-            data: {
-                w: 0, h: 0, 
-                sourceCanvas: null, 
-                imgData: null,
-                corners: { tl:{x:0,y:0}, tr:{x:0,y:0}, bl:{x:0,y:0}, br:{x:0,y:0} },
-                state: 'calibrate' // 'calibrate' หรือ 'result'
-            },
-
-            // --- สัดส่วนตาข่าย (Grid Relative Positions) ---
-            // เราสมมติว่ากล่องซ้าย(1-15) และขวา(16-30) มีความกว้างเท่ากัน และเว้นช่องตรงกลาง
-            // สัดส่วนแกน X (0.0 ถึง 1.0 จากซ้ายไปขวา)
-            gridColsX: [
-                0.000, 0.133, 0.267, 0.400, // คอลัมน์ 1 (ก, ข, ค, ง)
-                0.600, 0.733, 0.867, 1.000  // คอลัมน์ 2 (ก, ข, ค, ง)
-            ],
-
-            init() {
-                document.getElementById('btn-home').addEventListener('click', () => this.showHome());
-                document.getElementById('btn-capture').addEventListener('click', () => this.capture());
-                this.renderHome();
-                this.setupDragEvents();
-            },
-
-            // --- UI พื้นฐาน ---
-            switchView(v) {
-                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-                document.getElementById(v).classList.add('active');
-                if(v !== 'view-scan') this.stopCamera();
-            },
-            showHome() { this.renderHome(); this.switchView('view-home'); },
-
-            renderHome() {
-                const list = document.getElementById('keys-list');
-                const empty = document.getElementById('no-keys-msg');
-                list.innerHTML = '';
-                if(this.keys.length === 0) { empty.classList.remove('hidden'); }
-                else {
-                    empty.classList.add('hidden');
-                    this.keys.forEach(k => {
-                        list.innerHTML += `
-                            <div class="bg-white p-4 rounded-xl shadow-sm border flex justify-between items-center">
-                                <div><h3 class="font-bold text-gray-800">${k.name}</h3><p class="text-xs text-gray-500">30 ข้อ</p></div>
-                                <div class="flex gap-2">
-                                    <button onclick="app.editKey(${k.id})" class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 border"><i class="fa-solid fa-pen"></i></button>
-                                    <button onclick="app.startScan(${k.id})" class="w-10 h-10 rounded-full bg-blue-600 text-white shadow"><i class="fa-solid fa-camera"></i></button>
-                                    <button onclick="app.deleteKey(${k.id})" class="w-10 h-10 rounded-full bg-red-50 text-red-600 border"><i class="fa-solid fa-trash"></i></button>
-                                </div>
-                            </div>`;
-                    });
-                }
-            },
-
-            createNewKey() { this.editingKeyId = null; document.getElementById('key-name').value = ''; this.renderEditGrid({}); this.switchView('view-edit'); },
-            editKey(id) { 
-                this.editingKeyId = id; const k = this.keys.find(x => x.id === id); 
-                document.getElementById('key-name').value = k.name; this.renderEditGrid(k.answers); this.switchView('view-edit'); 
-            },
+            <div class="score-card">
+                <h2 id="final-score">0/30</h2>
+                <p>คะแนนที่ได้</p>
+            </div>
             
-            renderEditGrid(answers) {
-                const grid = document.getElementById('answer-grid'); grid.innerHTML = '';
-                const labels = ['ก', 'ข', 'ค', 'ง']; 
-                for(let i=1; i<=30; i++) {
-                    let rHTML = '';
-                    for(let j=0; j<4; j++) rHTML += `<div class="radio-custom"><input type="radio" id="q${i}_a${j}" name="q${i}" value="${j}" ${answers[i]===j?'checked':''}><label for="q${i}_a${j}">${labels[j]}</label></div>`;
-                    grid.innerHTML += `<div class="flex items-center gap-4 py-2 border-b"><div class="w-8 text-right font-bold text-gray-500">${i}.</div><div class="flex flex-1 justify-around">${rHTML}</div></div>`;
-                }
-            },
+            <!-- Added Canvas for visual feedback -->
+            <div class="result-image-container">
+                <canvas id="resultCanvas"></canvas>
+            </div>
             
-            saveKey() {
-                const name = document.getElementById('key-name').value.trim() || 'เฉลยล่าสุด';
-                const answers = {};
-                for(let i=1; i<=30; i++) {
-                    const sel = document.querySelector(`input[name="q${i}"]:checked`);
-                    if(sel) answers[i] = parseInt(sel.value);
-                }
-                if(this.editingKeyId) {
-                    const idx = this.keys.findIndex(k => k.id === this.editingKeyId);
-                    this.keys[idx] = { ...this.keys[idx], name, answers };
-                } else { this.keys.push({ id: Date.now(), name, answers }); }
-                localStorage.setItem('omr_keys_ultimate', JSON.stringify(this.keys)); this.showHome();
-            },
-            deleteKey(id) { if(confirm('ลบเฉลยนี้?')) { this.keys = this.keys.filter(k => k.id !== id); localStorage.setItem('omr_keys_ultimate', JSON.stringify(this.keys)); this.renderHome(); } },
+            <div class="result-details" id="result-details">
+                <!-- Javascript will inject question results here -->
+            </div>
+            
+            <div class="action-buttons">
+                <button id="btn-scan-next" class="primary-btn">สแกนแผ่นต่อไป</button>
+                <button id="btn-edit-key" class="secondary-btn">แก้ไขเฉลย</button>
+            </div>
+        </div>
+    </div>
 
-            // --- ส่วนกล้อง ---
-            startScan(keyId) {
-                this.currentScanKeyId = keyId; this.switchView('view-scan');
-                const video = document.getElementById('video-feed');
-                navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } })
-                .then(stream => { this.videoStream = stream; video.srcObject = stream; })
-                .catch(err => { alert('ไม่สามารถเปิดกล้องได้'); this.showHome(); });
-            },
-            stopCamera() { if(this.videoStream) { this.videoStream.getTracks().forEach(t => t.stop()); this.videoStream = null; } },
+    <!-- OpenCV.js -->
+    <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
+    <!-- Custom JS -->
+    <script>/* ====================================================
+   OMR Scanner — app.js
+   ==================================================== */
 
-            capture() {
-                const video = document.getElementById('video-feed');
-                const pCanvas = document.getElementById('process-canvas');
-                const pCtx = pCanvas.getContext('2d', { willReadFrequently: true });
-                
-                // Crop image ให้ตรงกับที่เห็นบนจอ
-                const vRatio = video.videoWidth / video.videoHeight;
-                const cRatio = video.clientWidth / video.clientHeight;
-                let drawW, drawH, startX, startY;
-                
-                if (vRatio > cRatio) {
-                    drawH = video.videoHeight; drawW = video.videoHeight * cRatio;
-                    startX = (video.videoWidth - drawW) / 2; startY = 0;
-                } else {
-                    drawW = video.videoWidth; drawH = video.videoWidth / cRatio;
-                    startX = 0; startY = (video.videoHeight - drawH) / 2;
-                }
+'use strict';
 
-                pCanvas.width = drawW; pCanvas.height = drawH;
-                pCtx.drawImage(video, startX, startY, drawW, drawH, 0, 0, drawW, drawH);
-                
-                this.data.w = drawW; this.data.h = drawH;
-                this.data.sourceCanvas = document.createElement('canvas');
-                this.data.sourceCanvas.width = drawW; this.data.sourceCanvas.height = drawH;
-                this.data.sourceCanvas.getContext('2d').drawImage(pCanvas, 0, 0);
-                this.data.imgData = pCtx.getImageData(0, 0, drawW, drawH);
-                
-                this.stopCamera();
-                
-                // ตั้งค่าเริ่มต้นจุด 4 มุม ให้กางออกประมาณ 60% ของภาพ เพื่อให้ลากง่าย
-                this.data.corners = {
-                    tl: { x: drawW * 0.2, y: drawH * 0.2 },
-                    tr: { x: drawW * 0.8, y: drawH * 0.2 },
-                    bl: { x: drawW * 0.2, y: drawH * 0.8 },
-                    br: { x: drawW * 0.8, y: drawH * 0.8 }
-                };
+// ─── Constants ───────────────────────────────────────────────────────────────
+const NUM_QUESTIONS = 30;
+const CHOICES       = ['ก', 'ข', 'ค', 'ง'];
 
-                this.data.state = 'calibrate';
-                this.prepareResultView();
-            },
+// Bubble layout in the warped 600×800 image
+// Two columns: Q1-15 on the left, Q16-30 on the right
+const BUBBLE_LAYOUT = {
+  dw: 600, dh: 800,
+  cols: [
+    // { x: left-edge of bubble column, choices: [x0,x1,x2,x3], rows: [y0…y14] }
+    {
+      choices: [74, 140, 206, 272],
+      rows: [105,136,167,198,229,260,291,322,353,384,415,446,477,508,539]
+    },
+    {
+      choices: [338, 404, 470, 536],
+      rows: [105,136,167,198,229,260,291,322,353,384,415,446,477,508,539]
+    }
+  ],
+  bubbleR: 14   // radius in pixels on the 600×800 canvas
+};
 
-            prepareResultView() {
-                this.switchView('view-result');
-                
-                // จัดการ UI
-                document.getElementById('instruction-bar').classList.remove('hidden');
-                document.getElementById('score-header').classList.add('hidden');
-                document.getElementById('btn-do-grade').classList.remove('hidden');
-                document.getElementById('btn-back-home').classList.add('hidden');
-                document.getElementById('btn-scan-next').classList.add('hidden');
-                
-                // แสดงเป้าจับลาก
-                document.querySelectorAll('.handle').forEach(h => h.style.display = 'flex');
+// ─── App State ───────────────────────────────────────────────────────────────
+let answerKey     = new Array(NUM_QUESTIONS).fill(null);
+let capturedImage = null;   // ImageData from captured frame
+let capturedBitmap = null;  // ImageBitmap for re-drawing
 
-                this.updateHandlesPosition();
-                this.drawGrid(); // วาดตาข่ายให้ดูระหว่างลาก
-            },
+// corner points in canvas pixel space [TL, TR, BR, BL]
+let corners = [];
 
-            // --- คำนวณพิกัดแต่ละวงกลมจาก 4 มุม (Bilinear Interpolation) ---
-            getPoint(colIndex, rowIndex) {
-                // rowIndex คือ 0 ถึง 14 (สำหรับ 15 ข้อ)
-                const pctY = rowIndex / 14; 
-                const pctX = this.gridColsX[colIndex];
-                
-                const c = this.data.corners;
-                // หาพิกัดขอบซ้าย-ขวา ในบรรทัดนี้
-                const leftX = c.tl.x + (c.bl.x - c.tl.x) * pctY;
-                const leftY = c.tl.y + (c.bl.y - c.tl.y) * pctY;
-                const rightX = c.tr.x + (c.br.x - c.tr.x) * pctY;
-                const rightY = c.tr.y + (c.br.y - c.tr.y) * pctY;
+// drag state
+let dragging  = { active: false, idx: -1 };
 
-                // หาพิกัด X ในบรรทัด
-                return {
-                    x: leftX + (rightX - leftX) * pctX,
-                    y: leftY + (rightY - leftY) * pctX
-                };
-            },
+let stream = null;
+let cvReady = false;
 
-            // วาดตาข่ายเพื่อช่วยเล็ง (แสดงขณะกำลังลากเป้า)
-            drawGrid() {
-                const canvas = document.getElementById('adjust-canvas');
-                const ctx = canvas.getContext('2d');
-                canvas.width = this.data.w; canvas.height = this.data.h;
-                
-                // วาดภาพต้นฉบับ
-                ctx.drawImage(this.data.sourceCanvas, 0, 0);
+// ─── DOM References ──────────────────────────────────────────────────────────
+const screens = {
+  loading: document.getElementById('loading-screen'),
+  setup:   document.getElementById('setup-screen'),
+  scanner: document.getElementById('scanner-screen'),
+  adjust:  document.getElementById('adjust-screen'),
+  result:  document.getElementById('result-screen')
+};
 
-                if (this.data.state !== 'calibrate') return;
+const videoEl    = document.getElementById('videoElement');
+const overlayC   = document.getElementById('overlayCanvas');
+const adjustC    = document.getElementById('adjustCanvas');
+const processingC= document.getElementById('processingCanvas');
+const magnifier  = document.getElementById('corner-magnifier');
+const magCanvas  = document.getElementById('magCanvas');
 
-                // วาดเส้นตาข่ายบางๆ
-                ctx.strokeStyle = 'rgba(59, 130, 246, 0.5)';
-                ctx.lineWidth = 2;
-                const bubbleR = this.data.w * 0.015;
+// ─── Screen Management ───────────────────────────────────────────────────────
+function switchScreen(name) {
+  Object.values(screens).forEach(s => s.classList.remove('active'));
+  screens[name].classList.add('active');
+}
 
-                for(let r=0; r<15; r++) {
-                    for(let c=0; c<8; c++) {
-                        const pt = this.getPoint(c, r);
-                        ctx.beginPath();
-                        ctx.arc(pt.x, pt.y, bubbleR, 0, Math.PI*2);
-                        ctx.stroke();
-                    }
-                }
-            },
+// ─── OpenCV Ready ────────────────────────────────────────────────────────────
+function onOpenCvReady() {
+  cvReady = true;
+  buildSetupUI();
+  switchScreen('setup');
+}
 
-            // --- ตรวจคำตอบ (ประมวลผลแสงเงาอัจฉริยะ) ---
-            finishCalibration() {
-                this.data.state = 'result';
-                
-                // เปลี่ยน UI เป็นโหมดแสดงผล
-                document.getElementById('instruction-bar').classList.add('hidden');
-                document.getElementById('score-header').classList.remove('hidden');
-                document.getElementById('btn-do-grade').classList.add('hidden');
-                document.getElementById('btn-back-home').classList.remove('hidden');
-                document.getElementById('btn-scan-next').classList.remove('hidden');
-                
-                // ซ่อนเป้าลาก
-                document.querySelectorAll('.handle').forEach(h => h.style.display = 'none');
+// ─── Setup UI ────────────────────────────────────────────────────────────────
+function buildSetupUI() {
+  const container = document.getElementById('keys-container');
+  container.innerHTML = '';
+  for (let q = 0; q < NUM_QUESTIONS; q++) {
+    const row = document.createElement('div');
+    row.className = 'key-row';
+    const lbl = document.createElement('span');
+    lbl.className = 'key-label';
+    lbl.textContent = `ข้อ ${q + 1}`;
+    row.appendChild(lbl);
+    const choices = document.createElement('div');
+    choices.className = 'key-choices';
+    CHOICES.forEach((ch, ci) => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.textContent = ch;
+      btn.dataset.q = q;
+      btn.dataset.c = ci;
+      btn.addEventListener('click', () => {
+        answerKey[q] = ci;
+        row.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+      });
+      choices.appendChild(btn);
+    });
+    row.appendChild(choices);
+    container.appendChild(row);
+  }
+}
 
-                const canvas = document.getElementById('adjust-canvas');
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(this.data.sourceCanvas, 0, 0);
-                
-                const answerKey = this.keys.find(k => k.id === this.currentScanKeyId).answers;
-                const bubbleR = this.data.w * 0.012; // รัศมีสำหรับเช็คสี
-                let score = 0;
+document.getElementById('btn-start-scan').addEventListener('click', startScanner);
+document.getElementById('btn-back-setup').addEventListener('click', stopScanner);
+document.getElementById('btn-capture').addEventListener('click', captureFrame);
+document.getElementById('btn-confirm-adjust').addEventListener('click', confirmAdjust);
+document.getElementById('btn-cancel-adjust').addEventListener('click', () => {
+  releaseBitmap();
+  switchScreen('scanner');
+});
+document.getElementById('btn-scan-next').addEventListener('click', () => switchScreen('scanner'));
+document.getElementById('btn-edit-key').addEventListener('click', () => {
+  stopScanner();
+  switchScreen('setup');
+});
 
-                ctx.lineWidth = 3;
+// ─── Camera ──────────────────────────────────────────────────────────────────
+async function startScanner() {
+  switchScreen('scanner');
+  if (stream) return;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+      audio: false
+    });
+    videoEl.srcObject = stream;
+    await videoEl.play();
+  } catch (e) {
+    alert('ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตการเข้าถึงกล้อง');
+  }
+}
 
-                for(let q=1; q<=30; q++) {
-                    const isCol1 = q <= 15;
-                    const rowIndex = isCol1 ? q - 1 : q - 16;
-                    const colOffset = isCol1 ? 0 : 4;
+function stopScanner() {
+  if (stream) {
+    stream.getTracks().forEach(t => t.stop());
+    stream = null;
+  }
+  switchScreen('setup');
+}
 
-                    // 1. เก็บค่าความดำของ 4 ตัวเลือกในข้อนั้น
-                    let darknessValues = [];
-                    let choicePoints = [];
-                    
-                    for(let c=0; c<4; c++) {
-                        const pt = this.getPoint(colOffset + c, rowIndex);
-                        choicePoints.push(pt);
-                        darknessValues.push(this.getDarknessScore(pt.x, pt.y, bubbleR));
-                    }
+// ─── Capture ─────────────────────────────────────────────────────────────────
+async function captureFrame() {
+  const vw = videoEl.videoWidth, vh = videoEl.videoHeight;
+  if (!vw || !vh) return;
+  processingC.width  = vw;
+  processingC.height = vh;
+  const ctx = processingC.getContext('2d');
+  ctx.drawImage(videoEl, 0, 0, vw, vh);
 
-                    // 2. วิเคราะห์หาข้อที่ถูกฝน (Adaptive Threshold)
-                    // แทนที่จะใช้ค่าสีดำตายตัว เราเทียบความต่างระหว่างวงที่ดำสุด กับวงที่สว่างสุดในข้อนั้น
-                    const maxDarkness = Math.max(...darknessValues);
-                    const minDarkness = Math.min(...darknessValues);
-                    let selected = -1;
+  // Store bitmap for adjust screen
+  releaseBitmap();
+  capturedBitmap = await createImageBitmap(processingC);
+  switchScreen('adjust');
+  initAdjustScreen();
+}
 
-                    // ถ้ารอยดำสุด เข้มกว่ารอยสว่างสุดอย่างชัดเจน (ห่างกันอย่างน้อย 15 แต้ม) ถือว่ามีการฝน
-                    // และป้องกันจุดสีเทาอ่อนๆ โดยบังคับว่าต้องมีความดำรวมเกิน 30
-                    if ((maxDarkness - minDarkness > 15) && maxDarkness > 30) {
-                        selected = darknessValues.indexOf(maxDarkness);
-                    }
+function releaseBitmap() {
+  if (capturedBitmap) { capturedBitmap.close(); capturedBitmap = null; }
+}
 
-                    // 3. ตรวจให้คะแนนและวาดกรอบ
-                    const correct = answerKey[q];
-                    if(selected === correct && correct !== undefined) score++;
+// ─── Adjust Screen ───────────────────────────────────────────────────────────
+function initAdjustScreen() {
+  const container = document.getElementById('adjust-container');
+  const cw = container.clientWidth  || window.innerWidth;
+  const ch = container.clientHeight || (window.innerHeight - 200);
 
-                    const drawR = bubbleR * 1.8;
-                    for(let c=0; c<4; c++) {
-                        const pt = choicePoints[c];
-                        // วาดกรอบสีฟ้า (เฉลย)
-                        if(c === correct) {
-                            ctx.strokeStyle = 'rgba(59, 130, 246, 0.9)';
-                            ctx.strokeRect(pt.x-drawR, pt.y-drawR, drawR*2, drawR*2);
-                        }
-                        // วาดกรอบสีเขียว/แดง (คำตอบนักเรียน)
-                        if(c === selected) {
-                            const isCorr = (selected === correct);
-                            ctx.fillStyle = isCorr ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)';
-                            ctx.fillRect(pt.x-drawR, pt.y-drawR, drawR*2, drawR*2);
-                        }
-                    }
-                }
+  adjustC.width  = cw;
+  adjustC.height = ch;
 
-                document.getElementById('score-display').innerText = `${score}/30`;
-            },
+  // Fit image inside canvas
+  const imgW = capturedBitmap.width, imgH = capturedBitmap.height;
+  const scale = Math.min(cw / imgW, ch / imgH);
+  const offX  = (cw - imgW * scale) / 2;
+  const offY  = (ch - imgH * scale) / 2;
 
-            // อ่านค่าความดำ (ยิ่งดำ แต้มยิ่งสูง)
-            getDarknessScore(cx, cy, r) {
-                const w = this.data.w, h = this.data.h, d = this.data.imgData.data;
-                let sumDarkness = 0, count = 0;
-                const rSq = r*r;
-                for(let y=Math.floor(cy-r); y<=Math.ceil(cy+r); y++) {
-                    for(let x=Math.floor(cx-r); x<=Math.ceil(cx+r); x++) {
-                        if(x<0||x>=w||y<0||y>=h) continue;
-                        if( ((x-cx)*(x-cx) + (y-cy)*(y-cy)) <= rSq ) { 
-                            const i = (y*w+x)*4;
-                            // Grayscale
-                            const gray = d[i]*0.299 + d[i+1]*0.587 + d[i+2]*0.114;
-                            // กลับค่า ยิ่งดำ(ค่า gray น้อย) ให้แต้มสูง 
-                            sumDarkness += (255 - gray);
-                            count++;
-                        }
-                    }
-                }
-                return count === 0 ? 0 : (sumDarkness / count);
-            },
+  // Default corners: 10% inset
+  const mx = imgW * 0.10 * scale + offX;
+  const my = imgH * 0.10 * scale + offY;
+  const bx = imgW * 0.90 * scale + offX;
+  const by = imgH * 0.90 * scale + offY;
+  corners = [
+    { x: mx, y: my },   // TL
+    { x: bx, y: my },   // TR
+    { x: bx, y: by },   // BR
+    { x: mx, y: by }    // BL
+  ];
 
-            // --- ระบบจับลาก (Drag & Drop) ---
-            setupDragEvents() {
-                const container = document.getElementById('adjust-container');
-                const handles = document.querySelectorAll('.handle');
-                let activeId = null;
-                let animationFrame = null;
+  // Store render params for magnifier
+  adjustC._imgScale = scale;
+  adjustC._offX = offX;
+  adjustC._offY = offY;
+  adjustC._imgW = imgW;
+  adjustC._imgH = imgH;
 
-                const getPos = (e) => {
-                    const rect = container.getBoundingClientRect();
-                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                    return { x: clientX - rect.left, y: clientY - rect.top };
-                };
+  drawAdjust();
+  setupDragHandlers();
+}
 
-                const onMove = (e) => {
-                    if(!activeId || this.data.state !== 'calibrate') return;
-                    e.preventDefault();
-                    const pos = getPos(e);
-                    
-                    // แปลงพิกัดจอ -> พิกัดรูป
-                    const scaleX = app.data.w / container.clientWidth;
-                    const scaleY = app.data.h / container.clientHeight;
-                    app.data.corners[activeId] = { x: pos.x * scaleX, y: pos.y * scaleY };
-                    
-                    // อัปเดต UI เป้าลาก
-                    const el = document.getElementById(`h-${activeId}`);
-                    el.style.left = `${pos.x}px`; el.style.top = `${pos.y}px`;
-                    
-                    if(!animationFrame) {
-                        animationFrame = requestAnimationFrame(() => {
-                            app.drawGrid(); // วาดตาข่ายใหม่ทันที
-                            animationFrame = null;
-                        });
-                    }
-                };
+// Draw canvas image + quad + handles
+function drawAdjust() {
+  const ctx = adjustC.getContext('2d');
+  const cw = adjustC.width, ch = adjustC.height;
+  ctx.clearRect(0, 0, cw, ch);
 
-                const onEnd = () => { activeId = null; };
+  if (capturedBitmap) {
+    const scale = adjustC._imgScale;
+    const offX  = adjustC._offX, offY = adjustC._offY;
+    ctx.drawImage(capturedBitmap,
+      0, 0, capturedBitmap.width, capturedBitmap.height,
+      offX, offY, capturedBitmap.width * scale, capturedBitmap.height * scale
+    );
+  }
 
-                handles.forEach(h => {
-                    const startFn = (e) => { e.preventDefault(); activeId = h.dataset.id; };
-                    h.addEventListener('mousedown', startFn);
-                    h.addEventListener('touchstart', startFn, {passive: false});
-                });
+  // Draw quad
+  ctx.beginPath();
+  ctx.moveTo(corners[0].x, corners[0].y);
+  corners.forEach((c, i) => { if (i > 0) ctx.lineTo(c.x, c.y); });
+  ctx.closePath();
+  ctx.strokeStyle = 'rgba(0,212,170,0.85)';
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([8, 4]);
+  ctx.stroke();
+  ctx.setLineDash([]);
 
-                window.addEventListener('mousemove', onMove);
-                window.addEventListener('touchmove', onMove, {passive: false});
-                window.addEventListener('mouseup', onEnd);
-                window.addEventListener('touchend', onEnd);
-                window.addEventListener('resize', () => { if(document.getElementById('view-result').classList.contains('active')) this.updateHandlesPosition(); });
-            },
+  // Overlay tint inside quad
+  ctx.beginPath();
+  ctx.moveTo(corners[0].x, corners[0].y);
+  corners.forEach((c, i) => { if (i > 0) ctx.lineTo(c.x, c.y); });
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(0,212,170,0.07)';
+  ctx.fill();
 
-            updateHandlesPosition() {
-                const container = document.getElementById('adjust-container');
-                if(!container.clientWidth) return;
-                const scaleX = container.clientWidth / this.data.w;
-                const scaleY = container.clientHeight / this.data.h;
-                
-                for(const [key, pt] of Object.entries(this.data.corners)) {
-                    const el = document.getElementById(`h-${key}`);
-                    el.style.left = `${pt.x * scaleX}px`;
-                    el.style.top = `${pt.y * scaleY}px`;
-                }
+  // Draw handles
+  const labels = ['TL', 'TR', 'BR', 'BL'];
+  const colors  = ['#6c63ff','#6c63ff','#6c63ff','#6c63ff'];
+  corners.forEach((c, i) => {
+    const isActive = dragging.active && dragging.idx === i;
+    const r = isActive ? 20 : 16;
+
+    // Outer ring
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, r + 4, 0, Math.PI * 2);
+    ctx.fillStyle = isActive ? 'rgba(108,99,255,0.35)' : 'rgba(108,99,255,0.18)';
+    ctx.fill();
+
+    // Fill
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = colors[i];
+    ctx.fill();
+
+    // Cross inside
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(c.x - 6, c.y); ctx.lineTo(c.x + 6, c.y);
+    ctx.moveTo(c.x, c.y - 6); ctx.lineTo(c.x, c.y + 6);
+    ctx.stroke();
+
+    // Label
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 9px Prompt, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(labels[i], c.x, c.y - r - 4);
+  });
+}
+
+// ─── NEW DRAG MECHANISM: Floating Magnifier ───────────────────────────────────
+// Instead of touching directly on the tiny handle (which is then hidden by the
+// finger), the user can touch ANYWHERE near a handle and the actual position is
+// shown in a magnifier bubble that floats 110px ABOVE the touch point.
+// This completely solves the occlusion problem.
+
+const HANDLE_RADIUS = 40; // px — touch hit area per handle
+const MAG_ZOOM      = 2.5; // zoom factor inside magnifier
+const MAG_SIZE      = 80;  // px diameter
+
+function setupDragHandlers() {
+  adjustC.removeEventListener('touchstart', onTouchStart);
+  adjustC.removeEventListener('touchmove',  onTouchMove);
+  adjustC.removeEventListener('touchend',   onTouchEnd);
+  adjustC.removeEventListener('mousedown',  onMouseDown);
+
+  adjustC.addEventListener('touchstart', onTouchStart, { passive: false });
+  adjustC.addEventListener('touchmove',  onTouchMove,  { passive: false });
+  adjustC.addEventListener('touchend',   onTouchEnd,   { passive: false });
+  adjustC.addEventListener('mousedown',  onMouseDown);
+}
+
+// ── Coordinate helpers ────────────────────────────────────────────────────────
+function getCanvasPos(e) {
+  const rect = adjustC.getBoundingClientRect();
+  const scaleX = adjustC.width  / rect.width;
+  const scaleY = adjustC.height / rect.height;
+  let cx, cy;
+  if (e.touches && e.touches.length > 0) {
+    cx = (e.touches[0].clientX - rect.left) * scaleX;
+    cy = (e.touches[0].clientY - rect.top)  * scaleY;
+  } else {
+    cx = (e.clientX - rect.left) * scaleX;
+    cy = (e.clientY - rect.top)  * scaleY;
+  }
+  return { x: cx, y: cy };
+}
+
+function getScreenPos(e) {
+  // Returns position in viewport coordinates (for positioning the magnifier)
+  if (e.touches && e.touches.length > 0) {
+    return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }
+  return { x: e.clientX, y: e.clientY };
+}
+
+function nearestHandle(cx, cy) {
+  let best = -1, bestDist = Infinity;
+  corners.forEach((c, i) => {
+    const d = Math.hypot(cx - c.x, cy - c.y);
+    if (d < bestDist) { bestDist = d; best = i; }
+  });
+  return bestDist < HANDLE_RADIUS ? best : -1;
+}
+
+// ── Touch handlers ────────────────────────────────────────────────────────────
+function onTouchStart(e) {
+  e.preventDefault();
+  const pos = getCanvasPos(e);
+  const idx = nearestHandle(pos.x, pos.y);
+  if (idx >= 0) {
+    dragging = { active: true, idx };
+    showMagnifier(e, corners[idx]);
+    drawAdjust();
+  }
+}
+
+function onTouchMove(e) {
+  e.preventDefault();
+  if (!dragging.active) return;
+  const pos = getCanvasPos(e);
+  // Clamp to canvas
+  corners[dragging.idx] = {
+    x: Math.max(0, Math.min(adjustC.width,  pos.x)),
+    y: Math.max(0, Math.min(adjustC.height, pos.y))
+  };
+  showMagnifier(e, corners[dragging.idx]);
+  drawAdjust();
+}
+
+function onTouchEnd(e) {
+  e.preventDefault();
+  dragging = { active: false, idx: -1 };
+  hideMagnifier();
+  drawAdjust();
+}
+
+// ── Mouse handlers (desktop preview) ─────────────────────────────────────────
+function onMouseDown(e) {
+  const pos = getCanvasPos(e);
+  const idx = nearestHandle(pos.x, pos.y);
+  if (idx < 0) return;
+  dragging = { active: true, idx };
+  drawAdjust();
+
+  const onMove = (mv) => {
+    const p = getCanvasPos(mv);
+    corners[dragging.idx] = {
+      x: Math.max(0, Math.min(adjustC.width,  p.x)),
+      y: Math.max(0, Math.min(adjustC.height, p.y))
+    };
+    drawAdjust();
+  };
+  const onUp = () => {
+    dragging = { active: false, idx: -1 };
+    drawAdjust();
+    window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('mouseup', onUp);
+  };
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
+}
+
+// ─── Magnifier ────────────────────────────────────────────────────────────────
+// Shows a zoomed-in circle that floats 110px above the touch point
+function showMagnifier(e, cornerPt) {
+  const screenPos = getScreenPos(e);
+
+  // Position magnifier ABOVE the finger (offset upward)
+  const MAG_OFFSET_Y = -110;
+  magnifier.style.left = `${screenPos.x}px`;
+  magnifier.style.top  = `${screenPos.y + MAG_OFFSET_Y}px`;
+  magnifier.style.display = 'block';
+
+  // Draw zoomed region into the magnifier canvas
+  const mc = magCanvas;
+  const mctx = mc.getContext('2d');
+  mc.width  = MAG_SIZE;
+  mc.height = MAG_SIZE;
+
+  const scale  = adjustC._imgScale || 1;
+  const offX   = adjustC._offX   || 0;
+  const offY   = adjustC._offY   || 0;
+  const imgW   = adjustC._imgW   || 1;
+  const imgH   = adjustC._imgH   || 1;
+
+  // Convert cornerPt (canvas px) back to image coordinates
+  const imgX = (cornerPt.x - offX) / scale;
+  const imgY = (cornerPt.y - offY) / scale;
+
+  // How much of the original image to show (half-size in image pixels)
+  const halfWImg = (MAG_SIZE / 2) / MAG_ZOOM;
+
+  const sx = Math.max(0, imgX - halfWImg);
+  const sy = Math.max(0, imgY - halfWImg);
+  const sw = Math.min(imgW - sx, halfWImg * 2);
+  const sh = Math.min(imgH - sy, halfWImg * 2);
+
+  if (capturedBitmap && sw > 0 && sh > 0) {
+    mctx.clearRect(0, 0, MAG_SIZE, MAG_SIZE);
+    // Clip to circle
+    mctx.save();
+    mctx.beginPath();
+    mctx.arc(MAG_SIZE/2, MAG_SIZE/2, MAG_SIZE/2, 0, Math.PI * 2);
+    mctx.clip();
+    mctx.drawImage(capturedBitmap, sx, sy, sw, sh, 0, 0, MAG_SIZE, MAG_SIZE);
+    mctx.restore();
+
+    // Draw crosshair at centre
+    mctx.strokeStyle = 'rgba(108,99,255,0.9)';
+    mctx.lineWidth = 1.5;
+    mctx.beginPath();
+    mctx.moveTo(MAG_SIZE/2, 4); mctx.lineTo(MAG_SIZE/2, MAG_SIZE - 4);
+    mctx.moveTo(4, MAG_SIZE/2); mctx.lineTo(MAG_SIZE - 4, MAG_SIZE/2);
+    mctx.stroke();
+  }
+}
+
+function hideMagnifier() {
+  magnifier.style.display = 'none';
+}
+
+// ─── Confirm Adjust → Warp + Grade ───────────────────────────────────────────
+function confirmAdjust() {
+  if (!cvReady) return alert('OpenCV ยังโหลดไม่เสร็จ');
+  if (!capturedBitmap) return;
+
+  // Convert canvas corner points → image coordinates
+  const scale = adjustC._imgScale;
+  const offX  = adjustC._offX;
+  const offY  = adjustC._offY;
+  const imgW  = capturedBitmap.width;
+  const imgH  = capturedBitmap.height;
+
+  const pts = corners.map(c => ({
+    x: Math.max(0, Math.min(imgW, (c.x - offX) / scale)),
+    y: Math.max(0, Math.min(imgH, (c.y - offY) / scale))
+  }));
+
+  // Draw original image to processingCanvas
+  processingC.width  = imgW;
+  processingC.height = imgH;
+  const pctx = processingC.getContext('2d');
+  pctx.drawImage(capturedBitmap, 0, 0);
+
+  try {
+    const src = cv.imread(processingC);
+    const gray    = new cv.Mat();
+    const blurred = new cv.Mat();
+    const thresh  = new cv.Mat();
+
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+    cv.GaussianBlur(gray, blurred, new cv.Size(5, 5), 0);
+    cv.adaptiveThreshold(blurred, thresh, 255,
+      cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 11, 2);
+
+    const DW = 600, DH = 800;
+    const srcPts = cv.matFromArray(4, 1, cv.CV_32FC2, [
+      pts[0].x, pts[0].y,
+      pts[1].x, pts[1].y,
+      pts[2].x, pts[2].y,
+      pts[3].x, pts[3].y
+    ]);
+    const dstPts = cv.matFromArray(4, 1, cv.CV_32FC2, [
+      0, 0, DW, 0, DW, DH, 0, DH
+    ]);
+    const M = cv.getPerspectiveTransform(srcPts, dstPts);
+    const dsize = new cv.Size(DW, DH);
+
+    const warpedColor  = new cv.Mat();
+    const warpedThresh = new cv.Mat();
+    cv.warpPerspective(src,    warpedColor,  M, dsize);
+    cv.warpPerspective(thresh, warpedThresh, M, dsize);
+
+    const results = gradeTest(warpedThresh, warpedColor);
+    cv.imshow('resultCanvas', warpedColor);
+
+    // Cleanup
+    src.delete(); gray.delete(); blurred.delete(); thresh.delete();
+    srcPts.delete(); dstPts.delete(); M.delete();
+    warpedColor.delete(); warpedThresh.delete();
+
+    showResults(results);
+    switchScreen('result');
+  } catch (err) {
+    console.error(err);
+    alert('เกิดข้อผิดพลาดในการประมวลผล: ' + err.message);
+  }
+}
+
+// ─── Grading ─────────────────────────────────────────────────────────────────
+function gradeTest(threshMat, colorMat) {
+  const results = [];
+  const layout  = BUBBLE_LAYOUT;
+
+  for (let q = 0; q < NUM_QUESTIONS; q++) {
+    const col    = q < 15 ? 0 : 1;
+    const rowIdx = q % 15;
+    const rowY   = layout.cols[col].rows[rowIdx];
+    const colXs  = layout.cols[col].choices;
+    const r      = layout.bubbleR;
+
+    let darkest = -1, darkestIdx = -1;
+
+    for (let ci = 0; ci < 4; ci++) {
+      const cx = colXs[ci], cy = rowY;
+      // Sample brightness inside bubble circle
+      let dark = 0, total = 0;
+      for (let dy = -r; dy <= r; dy++) {
+        for (let dx = -r; dx <= r; dx++) {
+          if (dx * dx + dy * dy <= r * r) {
+            const px = cx + dx, py = cy + dy;
+            if (px >= 0 && py >= 0 && px < threshMat.cols && py < threshMat.rows) {
+              const val = threshMat.ucharAt(py, px);
+              dark += val > 127 ? 1 : 0;
+              total++;
             }
-        };
+          }
+        }
+      }
+      const ratio = total > 0 ? dark / total : 0;
+      if (ratio > darkest) { darkest = ratio; darkestIdx = ci; }
 
-        window.addEventListener('DOMContentLoaded', () => app.init());
-    </script>
+      // Draw circle on color mat
+      const isKey  = answerKey[q] === ci;
+      const filled = ratio > 0.3;
+      const clr = filled
+        ? (isKey ? new cv.Scalar(0,212,100,255) : new cv.Scalar(255,80,80,255))
+        : (isKey ? new cv.Scalar(0,150,255,255) : new cv.Scalar(180,180,180,100));
+      cv.circle(colorMat, new cv.Point(cx, cy), r, clr, filled ? -1 : 1);
+    }
+
+    // Determine answer
+    let answer = null;
+    // Only count if the darkest bubble is ≥ 30% filled
+    const colXsRef = layout.cols[col].choices;
+    const ry = layout.cols[col].rows[rowIdx];
+    const ri = layout.bubbleR;
+    let maxRatio = 0;
+    let detectedIdx = -1;
+    for (let ci = 0; ci < 4; ci++) {
+      const cx = colXsRef[ci], cy = ry;
+      let dark = 0, total = 0;
+      for (let dy = -ri; dy <= ri; dy++) {
+        for (let dx = -ri; dx <= ri; dx++) {
+          if (dx*dx+dy*dy<=ri*ri) {
+            const px=cx+dx,py=cy+dy;
+            if(px>=0&&py>=0&&px<threshMat.cols&&py<threshMat.rows){
+              dark+=threshMat.ucharAt(py,px)>127?1:0;
+              total++;
+            }
+          }
+        }
+      }
+      const ratio = total>0?dark/total:0;
+      if(ratio>maxRatio){maxRatio=ratio;detectedIdx=ci;}
+    }
+    if(maxRatio>=0.3) answer = detectedIdx;
+
+    const correct = answer === answerKey[q];
+    results.push({ q: q+1, answer, key: answerKey[q], correct });
+  }
+  return results;
+}
+
+// ─── Results ─────────────────────────────────────────────────────────────────
+function showResults(results) {
+  const correct = results.filter(r => r.correct).length;
+  document.getElementById('final-score').textContent = `${correct}/${NUM_QUESTIONS}`;
+
+  const det = document.getElementById('result-details');
+  det.innerHTML = '';
+
+  results.forEach(r => {
+    const cls = r.answer === null ? 'no-ans' : (r.correct ? 'correct' : 'wrong');
+    const badge = r.correct ? '✓' : (r.answer === null ? '–' : '✗');
+    const detailText = r.answer === null
+      ? 'ไม่ได้ฝน'
+      : `ฝน ${CHOICES[r.answer]}  เฉลย ${r.key !== null ? CHOICES[r.key] : '–'}`;
+
+    const row = document.createElement('div');
+    row.className = `result-row ${cls}`;
+    row.innerHTML = `
+      <span class="result-num">ข้อ ${r.q}</span>
+      <span class="result-badge">${badge}</span>
+      <span class="result-detail">${detailText}</span>
+    `;
+    det.appendChild(row);
+  });
+}
+</script>
 </body>
 </html>
