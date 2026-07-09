@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ระบบตรวจข้อสอบ OMR (Ultimate Grid)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; overscroll-behavior-y: contain; }
+        .view-section { display: none; }
+        .view-section.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        #camera-container { position: relative; width: 100%; height: 75vh; background: #000; overflow: hidden; border-radius: 0.5rem; }
+        #video-feed { width: 100%; height: 100%; object-fit: cover; }
+        .guide-box {
+            position: absolute; top: 15%; left: 10%; right: 10%; bottom: 15%;
+            border: 2px dashed rgba(255, 255, 255, 0.5); pointer-events: none;
+        }
+
+        /* ระบบจุดจับลาก (Draggable Handles) */
+        #adjust-container { position: relative; width: 100%; touch-action: none; overflow: hidden; background: #ddd; }
+        #adjust-canvas { width: 100%; display: block; }
+        .handle {
+            position: absolute; width: 48px; height: 48px; 
+            background-color: rgba(239, 68, 68, 0.6); border: 3px solid #ef4444;
+            border-radius: 50%; transform: translate(-50%, -50%); cursor: grab; z-index: 20;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;
+        }
+        .handle::after { content: ''; width: 10px; height: 10px; background: white; border-radius: 50%; }
+        .handle:active { cursor: grabbing; background-color: rgba(220, 38, 38, 0.9); transform: translate(-50%, -50%) scale(1.1); }
+        
+        /* ป้ายกำกับบอกมุม */
+        .handle-label {
+            position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.7); color: white; padding: 2px 8px; border-radius: 4px;
+            font-size: 12px; white-space: nowrap; pointer-events: none;
+        }
+
+        .radio-custom input[type="radio"] { display: none; }
+        .radio-custom label {
+            display: inline-block; width: 36px; height: 36px; line-height: 36px;
+            text-align: center; border-radius: 50%; border: 2px solid #cbd5e1;
+            color: #64748b; font-weight: bold; cursor: pointer; transition: all 0.2s;
+        }
+        .radio-custom input[type="radio"]:checked + label { background-color: #3b82f6; border-color: #3b82f6; color: white; }
+    </style>
+</head>
+<body class="text-gray-800 h-screen flex flex-col">
+
+    <header class="bg-blue-800 text-white p-4 shadow-md flex justify-between items-center z-10 relative">
+        <h1 class="text-xl font-bold"><i class="fa-solid fa-crosshairs mr-2"></i> EasyGrade Ultimate</h1>
+        <button id="btn-home" class="text-white hover:text-blue-200 text-2xl"><i class="fa-solid fa-house"></i></button>
+    </header>
+
+    <main class="flex-1 overflow-y-auto p-4 relative w-full max-w-md mx-auto">
+        
+        <!-- View 1: หน้าหลัก -->
+        <section id="view-home" class="view-section active">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-lg font-bold text-gray-700">ชุดเฉลย</h2>
+                <button onclick="app.createNewKey()" class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700">
+                    <i class="fa-solid fa-plus mr-1"></i> สร้างเฉลย
+                </button>
+            </div>
+            <div id="keys-list" class="space-y-3"></div>
+            <div id="no-keys-msg" class="text-center text-gray-500 mt-10 hidden">
+                <i class="fa-solid fa-file-circle-plus text-5xl mb-4 opacity-50"></i>
+                <p>ยังไม่มีชุดเฉลย<br>คลิก "สร้างเฉลย" เพื่อเริ่มต้นใช้งาน</p>
+            </div>
+        </section>
+
+        <!-- View 2: จัดการเฉลย -->
+        <section id="view-edit" class="view-section">
+            <h2 class="text-lg font-bold text-gray-700 mb-4" id="edit-title">ตั้งค่าเฉลย (30 ข้อ)</h2>
+            <input type="text" id="key-name" placeholder="ชื่อชุดข้อสอบ" class="w-full p-3 border rounded-lg mb-4 focus:ring-2 focus:ring-blue-500 outline-none shadow-sm">
+            <div class="bg-white rounded-lg shadow-sm border p-4 mb-20"><div id="answer-grid" class="space-y-4"></div></div>
+            <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t flex gap-2 max-w-md mx-auto shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-20">
+                <button onclick="app.showHome()" class="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg font-bold">ยกเลิก</button>
+                <button onclick="app.saveKey()" class="flex-1 bg-green-500 text-white py-3 rounded-lg font-bold shadow-md">บันทึกเฉลย</button>
+            </div>
+        </section>
+
+        <!-- View 3: สแกนกล้อง -->
+        <section id="view-scan" class="view-section">
+            <div class="bg-blue-100 text-blue-800 p-3 text-sm mb-3 rounded-lg shadow-sm text-center">
+                ให้กลุ่มคำตอบอยู่ในกรอบ แล้วกดถ่ายภาพ
+            </div>
+            
+            <div id="camera-container" class="shadow-lg">
+                <video id="video-feed" autoplay playsinline></video>
+                <div class="guide-box"></div>
+            </div>
+
+            <div class="mt-6 flex justify-center">
+                <button id="btn-capture" class="w-20 h-20 bg-blue-600 rounded-full border-4 border-white shadow-[0_0_0_4px_rgba(37,99,235,0.5)] flex items-center justify-center text-white text-3xl hover:bg-blue-600 active:scale-95 transition">
+                    <i class="fa-solid fa-camera"></i>
+                </button>
+            </div>
+            <canvas id="process-canvas" class="hidden"></canvas>
+        </section>
+
+        <!-- View 4: ปรับตาข่ายและดูผลลัพธ์ -->
+        <section id="view-result" class="view-section">
+            <div id="instruction-bar" class="bg-red-100 border-l-4 border-red-500 text-red-800 p-3 text-sm mb-3 rounded shadow-sm">
+                <b>สำคัญมาก:</b> ลากเป้าสีแดง 4 มุม ไปทับตรงกลาง <b>วงกลมข้อแรกและข้อสุดท้าย</b> ของแต่ละฝั่ง (ตามป้ายบอก) ตาข่ายจะกางทับทุกข้อพอดีเป๊ะ!
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-4 border border-gray-200">
+                <!-- แถบคะแนน (ซ่อนไว้ตอนกำลังปรับกรอบ) -->
+                <div id="score-header" class="bg-green-500 text-white text-center py-4 relative hidden">
+                    <h2 class="text-sm font-bold opacity-90">คะแนนที่ได้</h2>
+                    <div class="text-6xl font-black drop-shadow-md" id="score-display">0/30</div>
+                </div>
+                
+                <div class="relative bg-gray-200">
+                    <div id="adjust-container" class="shadow">
+                        <canvas id="adjust-canvas"></canvas>
+                        <!-- เป้าลาก 4 มุม -->
+                        <div id="h-tl" class="handle" data-id="tl"><div class="handle-label">ข้อ 1 ก.</div></div>
+                        <div id="h-tr" class="handle" data-id="tr"><div class="handle-label">ข้อ 16 ง.</div></div>
+                        <div id="h-bl" class="handle" data-id="bl"><div class="handle-label">ข้อ 15 ก.</div></div>
+                        <div id="h-br" class="handle" data-id="br"><div class="handle-label">ข้อ 30 ง.</div></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex gap-2 mb-4" id="action-buttons">
+                <!-- ปุ่มตอนกำลังปรับกรอบ -->
+                <button id="btn-do-grade" onclick="app.finishCalibration()" class="w-full bg-blue-600 text-white py-4 rounded-lg font-bold shadow-md text-lg">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> กรอบตรงแล้ว ตรวจเลย!
+                </button>
+                
+                <!-- ปุ่มตอนตรวจเสร็จ (ซ่อนไว้ก่อน) -->
+                <button id="btn-back-home" onclick="app.showHome()" class="flex-1 bg-green-500 text-white py-3 rounded-lg font-bold shadow-md hidden">
+                    <i class="fa-solid fa-check mr-2"></i> เสร็จสิ้น
+                </button>
+                <button id="btn-scan-next" onclick="app.startScan(app.currentScanKeyId)" class="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg font-bold shadow-sm hidden">
+                    <i class="fa-solid fa-camera mr-2"></i> สแกนแผ่นใหม่
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        const app = {
+            keys: JSON.parse(localStorage.getItem('omr_keys_ultimate')) || [],
+            currentScanKeyId: null,
+            editingKeyId: null,
+            videoStream: null,
+            
+            // ข้อมูลภาพและจุด 4 มุม (TL, TR, BL, BR)
+            data: {
+                w: 0, h: 0, 
+                sourceCanvas: null, 
+                imgData: null,
+                corners: { tl:{x:0,y:0}, tr:{x:0,y:0}, bl:{x:0,y:0}, br:{x:0,y:0} },
+                state: 'calibrate' // 'calibrate' หรือ 'result'
+            },
+
+            // --- สัดส่วนตาข่าย (Grid Relative Positions) ---
+            // เราสมมติว่ากล่องซ้าย(1-15) และขวา(16-30) มีความกว้างเท่ากัน และเว้นช่องตรงกลาง
+            // สัดส่วนแกน X (0.0 ถึง 1.0 จากซ้ายไปขวา)
+            gridColsX: [
+                0.000, 0.133, 0.267, 0.400, // คอลัมน์ 1 (ก, ข, ค, ง)
+                0.600, 0.733, 0.867, 1.000  // คอลัมน์ 2 (ก, ข, ค, ง)
+            ],
+
+            init() {
+                document.getElementById('btn-home').addEventListener('click', () => this.showHome());
+                document.getElementById('btn-capture').addEventListener('click', () => this.capture());
+                this.renderHome();
+                this.setupDragEvents();
+            },
+
+            // --- UI พื้นฐาน ---
+            switchView(v) {
+                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+                document.getElementById(v).classList.add('active');
+                if(v !== 'view-scan') this.stopCamera();
+            },
+            showHome() { this.renderHome(); this.switchView('view-home'); },
+
+            renderHome() {
+                const list = document.getElementById('keys-list');
+                const empty = document.getElementById('no-keys-msg');
+                list.innerHTML = '';
+                if(this.keys.length === 0) { empty.classList.remove('hidden'); }
+                else {
+                    empty.classList.add('hidden');
+                    this.keys.forEach(k => {
+                        list.innerHTML += `
+                            <div class="bg-white p-4 rounded-xl shadow-sm border flex justify-between items-center">
+                                <div><h3 class="font-bold text-gray-800">${k.name}</h3><p class="text-xs text-gray-500">30 ข้อ</p></div>
+                                <div class="flex gap-2">
+                                    <button onclick="app.editKey(${k.id})" class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 border"><i class="fa-solid fa-pen"></i></button>
+                                    <button onclick="app.startScan(${k.id})" class="w-10 h-10 rounded-full bg-blue-600 text-white shadow"><i class="fa-solid fa-camera"></i></button>
+                                    <button onclick="app.deleteKey(${k.id})" class="w-10 h-10 rounded-full bg-red-50 text-red-600 border"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                            </div>`;
+                    });
+                }
+            },
+
+            createNewKey() { this.editingKeyId = null; document.getElementById('key-name').value = ''; this.renderEditGrid({}); this.switchView('view-edit'); },
+            editKey(id) { 
+                this.editingKeyId = id; const k = this.keys.find(x => x.id === id); 
+                document.getElementById('key-name').value = k.name; this.renderEditGrid(k.answers); this.switchView('view-edit'); 
+            },
+            
+            renderEditGrid(answers) {
+                const grid = document.getElementById('answer-grid'); grid.innerHTML = '';
+                const labels = ['ก', 'ข', 'ค', 'ง']; 
+                for(let i=1; i<=30; i++) {
+                    let rHTML = '';
+                    for(let j=0; j<4; j++) rHTML += `<div class="radio-custom"><input type="radio" id="q${i}_a${j}" name="q${i}" value="${j}" ${answers[i]===j?'checked':''}><label for="q${i}_a${j}">${labels[j]}</label></div>`;
+                    grid.innerHTML += `<div class="flex items-center gap-4 py-2 border-b"><div class="w-8 text-right font-bold text-gray-500">${i}.</div><div class="flex flex-1 justify-around">${rHTML}</div></div>`;
+                }
+            },
+            
+            saveKey() {
+                const name = document.getElementById('key-name').value.trim() || 'เฉลยล่าสุด';
+                const answers = {};
+                for(let i=1; i<=30; i++) {
+                    const sel = document.querySelector(`input[name="q${i}"]:checked`);
+                    if(sel) answers[i] = parseInt(sel.value);
+                }
+                if(this.editingKeyId) {
+                    const idx = this.keys.findIndex(k => k.id === this.editingKeyId);
+                    this.keys[idx] = { ...this.keys[idx], name, answers };
+                } else { this.keys.push({ id: Date.now(), name, answers }); }
+                localStorage.setItem('omr_keys_ultimate', JSON.stringify(this.keys)); this.showHome();
+            },
+            deleteKey(id) { if(confirm('ลบเฉลยนี้?')) { this.keys = this.keys.filter(k => k.id !== id); localStorage.setItem('omr_keys_ultimate', JSON.stringify(this.keys)); this.renderHome(); } },
+
+            // --- ส่วนกล้อง ---
+            startScan(keyId) {
+                this.currentScanKeyId = keyId; this.switchView('view-scan');
+                const video = document.getElementById('video-feed');
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } })
+                .then(stream => { this.videoStream = stream; video.srcObject = stream; })
+                .catch(err => { alert('ไม่สามารถเปิดกล้องได้'); this.showHome(); });
+            },
+            stopCamera() { if(this.videoStream) { this.videoStream.getTracks().forEach(t => t.stop()); this.videoStream = null; } },
+
+            capture() {
+                const video = document.getElementById('video-feed');
+                const pCanvas = document.getElementById('process-canvas');
+                const pCtx = pCanvas.getContext('2d', { willReadFrequently: true });
+                
+                // Crop image ให้ตรงกับที่เห็นบนจอ
+                const vRatio = video.videoWidth / video.videoHeight;
+                const cRatio = video.clientWidth / video.clientHeight;
+                let drawW, drawH, startX, startY;
+                
+                if (vRatio > cRatio) {
+                    drawH = video.videoHeight; drawW = video.videoHeight * cRatio;
+                    startX = (video.videoWidth - drawW) / 2; startY = 0;
+                } else {
+                    drawW = video.videoWidth; drawH = video.videoWidth / cRatio;
+                    startX = 0; startY = (video.videoHeight - drawH) / 2;
+                }
+
+                pCanvas.width = drawW; pCanvas.height = drawH;
+                pCtx.drawImage(video, startX, startY, drawW, drawH, 0, 0, drawW, drawH);
+                
+                this.data.w = drawW; this.data.h = drawH;
+                this.data.sourceCanvas = document.createElement('canvas');
+                this.data.sourceCanvas.width = drawW; this.data.sourceCanvas.height = drawH;
+                this.data.sourceCanvas.getContext('2d').drawImage(pCanvas, 0, 0);
+                this.data.imgData = pCtx.getImageData(0, 0, drawW, drawH);
+                
+                this.stopCamera();
+                
+                // ตั้งค่าเริ่มต้นจุด 4 มุม ให้กางออกประมาณ 60% ของภาพ เพื่อให้ลากง่าย
+                this.data.corners = {
+                    tl: { x: drawW * 0.2, y: drawH * 0.2 },
+                    tr: { x: drawW * 0.8, y: drawH * 0.2 },
+                    bl: { x: drawW * 0.2, y: drawH * 0.8 },
+                    br: { x: drawW * 0.8, y: drawH * 0.8 }
+                };
+
+                this.data.state = 'calibrate';
+                this.prepareResultView();
+            },
+
+            prepareResultView() {
+                this.switchView('view-result');
+                
+                // จัดการ UI
+                document.getElementById('instruction-bar').classList.remove('hidden');
+                document.getElementById('score-header').classList.add('hidden');
+                document.getElementById('btn-do-grade').classList.remove('hidden');
+                document.getElementById('btn-back-home').classList.add('hidden');
+                document.getElementById('btn-scan-next').classList.add('hidden');
+                
+                // แสดงเป้าจับลาก
+                document.querySelectorAll('.handle').forEach(h => h.style.display = 'flex');
+
+                this.updateHandlesPosition();
+                this.drawGrid(); // วาดตาข่ายให้ดูระหว่างลาก
+            },
+
+            // --- คำนวณพิกัดแต่ละวงกลมจาก 4 มุม (Bilinear Interpolation) ---
+            getPoint(colIndex, rowIndex) {
+                // rowIndex คือ 0 ถึง 14 (สำหรับ 15 ข้อ)
+                const pctY = rowIndex / 14; 
+                const pctX = this.gridColsX[colIndex];
+                
+                const c = this.data.corners;
+                // หาพิกัดขอบซ้าย-ขวา ในบรรทัดนี้
+                const leftX = c.tl.x + (c.bl.x - c.tl.x) * pctY;
+                const leftY = c.tl.y + (c.bl.y - c.tl.y) * pctY;
+                const rightX = c.tr.x + (c.br.x - c.tr.x) * pctY;
+                const rightY = c.tr.y + (c.br.y - c.tr.y) * pctY;
+
+                // หาพิกัด X ในบรรทัด
+                return {
+                    x: leftX + (rightX - leftX) * pctX,
+                    y: leftY + (rightY - leftY) * pctX
+                };
+            },
+
+            // วาดตาข่ายเพื่อช่วยเล็ง (แสดงขณะกำลังลากเป้า)
+            drawGrid() {
+                const canvas = document.getElementById('adjust-canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = this.data.w; canvas.height = this.data.h;
+                
+                // วาดภาพต้นฉบับ
+                ctx.drawImage(this.data.sourceCanvas, 0, 0);
+
+                if (this.data.state !== 'calibrate') return;
+
+                // วาดเส้นตาข่ายบางๆ
+                ctx.strokeStyle = 'rgba(59, 130, 246, 0.5)';
+                ctx.lineWidth = 2;
+                const bubbleR = this.data.w * 0.015;
+
+                for(let r=0; r<15; r++) {
+                    for(let c=0; c<8; c++) {
+                        const pt = this.getPoint(c, r);
+                        ctx.beginPath();
+                        ctx.arc(pt.x, pt.y, bubbleR, 0, Math.PI*2);
+                        ctx.stroke();
+                    }
+                }
+            },
+
+            // --- ตรวจคำตอบ (ประมวลผลแสงเงาอัจฉริยะ) ---
+            finishCalibration() {
+                this.data.state = 'result';
+                
+                // เปลี่ยน UI เป็นโหมดแสดงผล
+                document.getElementById('instruction-bar').classList.add('hidden');
+                document.getElementById('score-header').classList.remove('hidden');
+                document.getElementById('btn-do-grade').classList.add('hidden');
+                document.getElementById('btn-back-home').classList.remove('hidden');
+                document.getElementById('btn-scan-next').classList.remove('hidden');
+                
+                // ซ่อนเป้าลาก
+                document.querySelectorAll('.handle').forEach(h => h.style.display = 'none');
+
+                const canvas = document.getElementById('adjust-canvas');
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(this.data.sourceCanvas, 0, 0);
+                
+                const answerKey = this.keys.find(k => k.id === this.currentScanKeyId).answers;
+                const bubbleR = this.data.w * 0.012; // รัศมีสำหรับเช็คสี
+                let score = 0;
+
+                ctx.lineWidth = 3;
+
+                for(let q=1; q<=30; q++) {
+                    const isCol1 = q <= 15;
+                    const rowIndex = isCol1 ? q - 1 : q - 16;
+                    const colOffset = isCol1 ? 0 : 4;
+
+                    // 1. เก็บค่าความดำของ 4 ตัวเลือกในข้อนั้น
+                    let darknessValues = [];
+                    let choicePoints = [];
+                    
+                    for(let c=0; c<4; c++) {
+                        const pt = this.getPoint(colOffset + c, rowIndex);
+                        choicePoints.push(pt);
+                        darknessValues.push(this.getDarknessScore(pt.x, pt.y, bubbleR));
+                    }
+
+                    // 2. วิเคราะห์หาข้อที่ถูกฝน (Adaptive Threshold)
+                    // แทนที่จะใช้ค่าสีดำตายตัว เราเทียบความต่างระหว่างวงที่ดำสุด กับวงที่สว่างสุดในข้อนั้น
+                    const maxDarkness = Math.max(...darknessValues);
+                    const minDarkness = Math.min(...darknessValues);
+                    let selected = -1;
+
+                    // ถ้ารอยดำสุด เข้มกว่ารอยสว่างสุดอย่างชัดเจน (ห่างกันอย่างน้อย 15 แต้ม) ถือว่ามีการฝน
+                    // และป้องกันจุดสีเทาอ่อนๆ โดยบังคับว่าต้องมีความดำรวมเกิน 30
+                    if ((maxDarkness - minDarkness > 15) && maxDarkness > 30) {
+                        selected = darknessValues.indexOf(maxDarkness);
+                    }
+
+                    // 3. ตรวจให้คะแนนและวาดกรอบ
+                    const correct = answerKey[q];
+                    if(selected === correct && correct !== undefined) score++;
+
+                    const drawR = bubbleR * 1.8;
+                    for(let c=0; c<4; c++) {
+                        const pt = choicePoints[c];
+                        // วาดกรอบสีฟ้า (เฉลย)
+                        if(c === correct) {
+                            ctx.strokeStyle = 'rgba(59, 130, 246, 0.9)';
+                            ctx.strokeRect(pt.x-drawR, pt.y-drawR, drawR*2, drawR*2);
+                        }
+                        // วาดกรอบสีเขียว/แดง (คำตอบนักเรียน)
+                        if(c === selected) {
+                            const isCorr = (selected === correct);
+                            ctx.fillStyle = isCorr ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)';
+                            ctx.fillRect(pt.x-drawR, pt.y-drawR, drawR*2, drawR*2);
+                        }
+                    }
+                }
+
+                document.getElementById('score-display').innerText = `${score}/30`;
+            },
+
+            // อ่านค่าความดำ (ยิ่งดำ แต้มยิ่งสูง)
+            getDarknessScore(cx, cy, r) {
+                const w = this.data.w, h = this.data.h, d = this.data.imgData.data;
+                let sumDarkness = 0, count = 0;
+                const rSq = r*r;
+                for(let y=Math.floor(cy-r); y<=Math.ceil(cy+r); y++) {
+                    for(let x=Math.floor(cx-r); x<=Math.ceil(cx+r); x++) {
+                        if(x<0||x>=w||y<0||y>=h) continue;
+                        if( ((x-cx)*(x-cx) + (y-cy)*(y-cy)) <= rSq ) { 
+                            const i = (y*w+x)*4;
+                            // Grayscale
+                            const gray = d[i]*0.299 + d[i+1]*0.587 + d[i+2]*0.114;
+                            // กลับค่า ยิ่งดำ(ค่า gray น้อย) ให้แต้มสูง 
+                            sumDarkness += (255 - gray);
+                            count++;
+                        }
+                    }
+                }
+                return count === 0 ? 0 : (sumDarkness / count);
+            },
+
+            // --- ระบบจับลาก (Drag & Drop) ---
+            setupDragEvents() {
+                const container = document.getElementById('adjust-container');
+                const handles = document.querySelectorAll('.handle');
+                let activeId = null;
+                let animationFrame = null;
+
+                const getPos = (e) => {
+                    const rect = container.getBoundingClientRect();
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                    return { x: clientX - rect.left, y: clientY - rect.top };
+                };
+
+                const onMove = (e) => {
+                    if(!activeId || this.data.state !== 'calibrate') return;
+                    e.preventDefault();
+                    const pos = getPos(e);
+                    
+                    // แปลงพิกัดจอ -> พิกัดรูป
+                    const scaleX = app.data.w / container.clientWidth;
+                    const scaleY = app.data.h / container.clientHeight;
+                    app.data.corners[activeId] = { x: pos.x * scaleX, y: pos.y * scaleY };
+                    
+                    // อัปเดต UI เป้าลาก
+                    const el = document.getElementById(`h-${activeId}`);
+                    el.style.left = `${pos.x}px`; el.style.top = `${pos.y}px`;
+                    
+                    if(!animationFrame) {
+                        animationFrame = requestAnimationFrame(() => {
+                            app.drawGrid(); // วาดตาข่ายใหม่ทันที
+                            animationFrame = null;
+                        });
+                    }
+                };
+
+                const onEnd = () => { activeId = null; };
+
+                handles.forEach(h => {
+                    const startFn = (e) => { e.preventDefault(); activeId = h.dataset.id; };
+                    h.addEventListener('mousedown', startFn);
+                    h.addEventListener('touchstart', startFn, {passive: false});
+                });
+
+                window.addEventListener('mousemove', onMove);
+                window.addEventListener('touchmove', onMove, {passive: false});
+                window.addEventListener('mouseup', onEnd);
+                window.addEventListener('touchend', onEnd);
+                window.addEventListener('resize', () => { if(document.getElementById('view-result').classList.contains('active')) this.updateHandlesPosition(); });
+            },
+
+            updateHandlesPosition() {
+                const container = document.getElementById('adjust-container');
+                if(!container.clientWidth) return;
+                const scaleX = container.clientWidth / this.data.w;
+                const scaleY = container.clientHeight / this.data.h;
+                
+                for(const [key, pt] of Object.entries(this.data.corners)) {
+                    const el = document.getElementById(`h-${key}`);
+                    el.style.left = `${pt.x * scaleX}px`;
+                    el.style.top = `${pt.y * scaleY}px`;
+                }
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', () => app.init());
+    </script>
+</body>
+</html>
